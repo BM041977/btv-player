@@ -56,6 +56,7 @@ li .star.f{color:var(--fav)}
 </header>
 
 <div class="left">
+  <div class="bar" style="flex-wrap:nowrap"><input type="text" id="url" placeholder="Pega aquí el enlace de video (.m3u8, .mp4)" inputmode="url" enterkeyhint="go" autocomplete="off" style="flex:1;min-width:0"><button id="btnGo" class="pri">Ir ▶</button></div>
   <div class="stage">
     <video id="v" controls playsinline autopictureinpicture></video>
     <div id="msg" class="msg" hidden></div>
@@ -69,8 +70,7 @@ li .star.f{color:var(--fav)}
 
 <div class="right">
   <div class="add" id="addBox">
-    <div class="bar" style="flex-wrap:nowrap"><input type="text" id="url" placeholder="Enlace de video (.m3u8, .mp4) o de lista M3U" inputmode="url" enterkeyhint="go" autocomplete="off" style="flex:1;min-width:0"><button id="btnGo" class="pri">Ir ▶</button></div>
-    <div class="bar">
+        <div class="bar">
       <button id="btnPlay" class="pri">Reproducir enlace</button>
       <button id="btnLoadList">Cargar como lista</button>
     </div>
