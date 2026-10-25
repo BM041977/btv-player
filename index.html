@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BTV Player</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e1116">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#0e1116;--panel:#171c24;--line:#262d38;--fg:#e8ecf2;--mut:#8b95a5;--acc:#3ea6ff;--fav:#ffc233;--bad:#ff6b6b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);display:flex;flex-direction:column;gap:10px}
+header{display:flex;align-items:center;gap:8px;padding-top:10px}
+h1{font-size:18px;margin:0;flex:1;letter-spacing:.02em}
+h1 span{color:var(--acc)}
+button,input,textarea{font:inherit;color:inherit}
+button{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer}
+button:hover{border-color:var(--acc)}
+button.pri{background:var(--acc);color:#04121f;border-color:var(--acc);font-weight:600}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.stage{background:#000;border-radius:12px;overflow:hidden;position:relative;aspect-ratio:16/9;width:100%}
+video{width:100%;height:100%;display:block;background:#000}
+.msg{position:absolute;inset:auto 8px 8px 8px;background:#000c;border-radius:8px;padding:6px 10px;font-size:13px}
+.msg.err{color:var(--bad)}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+.bar .grow{flex:1;min-width:0}
+.now{color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+input[type=text],input[type=search],textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:90px;resize:vertical}
+.add{display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;flex-direction:column;gap:8px}
+.add.open{display:flex}
+.add small{color:var(--mut)}
+.tabs{display:flex;gap:6px}
+.tabs button{flex:1}
+.tabs button[aria-pressed=true]{border-color:var(--acc);color:var(--acc)}
+ul{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1;min-height:120px;border-top:1px solid var(--line)}
+li{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:4px 0}
+li .name{flex:1;min-width:0;text-align:left;background:none;border:0;padding:10px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+li.on .name{color:var(--acc);font-weight:600}
+li .star{background:none;border:0;padding:8px 10px;color:var(--mut);font-size:18px}
+li .star.f{color:var(--fav)}
+.empty{color:var(--mut);padding:18px 4px}
+@media (min-width:820px){body{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);grid-template-rows:auto 1fr;column-gap:16px}
+ header{grid-column:1/3}.left{display:flex;flex-direction:column;gap:10px}.right{display:flex;flex-direction:column;gap:10px;min-height:0}}
+</style>
+</head>
+<body>
+<header>
+  <h1>BTV <span>Player</span></h1>
+  <button id="btnAdd" aria-expanded="false">+ Agregar</button>
+  <button id="btnInstall" hidden>Instalar</button>
+</header>
+
+<div class="left">
+  <div class="stage">
+    <video id="v" controls playsinline autopictureinpicture></video>
+    <div id="msg" class="msg" hidden></div>
+  </div>
+  <div class="bar">
+    <button id="btnPip" class="pri">Imagen en imagen</button>
+    <button id="btnFull">Pantalla completa</button>
+    <div class="now grow" id="now">Elige un canal o pega un enlace</div>
+  </div>
+</div>
+
+<div class="right">
+  <div class="add" id="addBox">
+    <input type="text" id="url" placeholder="Enlace de video (.m3u8, .mp4) o de lista M3U" inputmode="url" autocomplete="off">
+    <div class="bar">
+      <button id="btnPlay" class="pri">Reproducir enlace</button>
+      <button id="btnLoadList">Cargar como lista</button>
+    </div>
+    <textarea id="paste" placeholder="O pega aquí el contenido de una lista M3U"></textarea>
+    <div class="bar">
+      <button id="btnParse">Cargar texto pegado</button>
+      <button id="btnFile">Abrir archivo .m3u</button>
+      <button id="btnClear">Borrar lista</button>
+    </div>
+    <input type="file" id="file" accept=".m3u,.m3u8,.txt,audio/x-mpegurl,application/vnd.apple.mpegurl" hidden>
+    <small>Solo para canales y videos que tengas derecho a ver. Algunos servidores bloquean cargar su lista desde el navegador: en ese caso abre el archivo o pega el texto.</small>
+  </div>
+
+  <input type="search" id="q" placeholder="Buscar canal">
+  <div class="tabs">
+    <button id="tabAll" aria-pressed="true">Todos</button>
+    <button id="tabFav" aria-pressed="false">Favoritos ★</button>
+  </div>
+  <ul id="list"></ul>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.17/hls.min.js"></script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var v=$('v'),msg=$('msg'),list=$('list'),now=$('now');
+  var channels=[],favs={},cur=null,hls=null,onlyFav=false;
+
+  function load(k,d){try{var s=localStorage.getItem(k);return s?JSON.parse(s):d}catch(e){return d}}
+  function save(k,x){try{localStorage.setItem(k,JSON.stringify(x))}catch(e){}}
+  channels=load('btv.channels',[]);favs=load('btv.favs',{});
+
+  function say(t,err){if(!t){msg.hidden=true;return}msg.textContent=t;msg.className='msg'+(err?' err':'');msg.hidden=false}
+
+  function parseM3U(text){
+    var out=[],lines=text.split(/\r?\n/),name=null,logo='';
+    for(var i=0;i<lines.length;i++){
+      var l=lines[i].trim();
+      if(!l)continue;
+      if(l.indexOf('#EXTINF')===0){
+        var c=l.lastIndexOf(',');name=c>=0?l.slice(c+1).trim():null;
+        var m=l.match(/tvg-name="([^"]*)"/);if(!name&&m)name=m[1];
+      }else if(l[0]!=='#'){
+        out.push({name:name||l,url:l});name=null;
+      }
+    }
+    return out;
+  }
+
+  function setChannels(arr){
+    var seen={};channels=arr.filter(function(c){if(seen[c.url])return false;seen[c.url]=1;return true});
+    save('btv.channels',channels);render();
+    say(channels.length+' canales cargados');setTimeout(function(){say('')},2500);
+  }
+
+  function render(){
+    var q=$('q').value.trim().toLowerCase();list.innerHTML='';
+    var shown=channels.filter(function(c){
+      return (!onlyFav||favs[c.url])&&(!q||c.name.toLowerCase().indexOf(q)>=0);
+    });
+    if(!shown.length){
+      var e=document.createElement('li');e.className='empty';
+      e.textContent=channels.length?'Sin resultados.':'Aún no hay canales. Toca “+ Agregar” para cargar una lista.';
+      list.appendChild(e);return;
+    }
+    shown.slice(0,600).forEach(function(c){
+      var li=document.createElement('li');if(cur&&cur.url===c.url)li.className='on';
+      var b=document.createElement('button');b.className='name';b.textContent=c.name;b.title=c.name;
+      b.onclick=function(){play(c)};
+      var s=document.createElement('button');s.className='star'+(favs[c.url]?' f':'');s.textContent=favs[c.url]?'★':'☆';
+      s.setAttribute('aria-label','Favorito');
+      s.onclick=function(){if(favs[c.url])delete favs[c.url];else favs[c.url]=1;save('btv.favs',favs);render()};
+      li.appendChild(b);li.appendChild(s);list.appendChild(li);
+    });
+  }
+
+  function stop(){if(hls){hls.destroy();hls=null}}
+
+  function play(c){
+    cur=c;now.textContent=c.name;say('Cargando…');stop();
+    var u=c.url,isHls=/\.m3u8(\?|$)/i.test(u)||/\/hls\//i.test(u);
+    if(isHls&&window.Hls&&Hls.isSupported()){
+      hls=new Hls({lowLatencyMode:true});
+      hls.loadSource(u);hls.attachMedia(v);
+      hls.on(Hls.Events.MANIFEST_PARSED,function(){v.play().catch(function(){})});
+      hls.on(Hls.Events.ERROR,function(_,d){
+        if(d.fatal)say('No se pudo reproducir. El servidor puede bloquearlo o el enlace ya no sirve.',true);
+      });
+    }else{
+      v.src=u;v.play().catch(function(){});
+    }
+    render();
+    if('mediaSession' in navigator){
+      navigator.mediaSession.metadata=new MediaMetadata({title:c.name,artist:'BTV Player'});
+    }
+  }
+
+  v.addEventListener('playing',function(){say('')});
+  v.addEventListener('error',function(){if(!hls)say('No se pudo reproducir este enlace.',true)});
+
+  /* Imagen en imagen */
+  function pip(){
+    if(!document.pictureInPictureEnabled){say('Este navegador no permite imagen en imagen. Usa Chrome.',true);return}
+    if(document.pictureInPictureElement){document.exitPictureInPicture();return}
+    if(v.readyState<2&&!v.src&&!hls){say('Primero elige un canal.',true);return}
+    v.requestPictureInPicture().catch(function(e){say('No se pudo abrir la imagen en imagen: '+e.message,true)});
+  }
+  $('btnPip').onclick=pip;
+  /* Al salir de la app con el video en marcha, pasa solo a flotante (Chrome lo permite en apps instaladas). */
+  try{navigator.mediaSession.setActionHandler('enterpictureinpicture',function(){pip()})}catch(e){}
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden&&!v.paused&&document.pictureInPictureEnabled&&!document.pictureInPictureElement){
+      v.requestPictureInPicture().catch(function(){});
+    }
+  });
+  $('btnFull').onclick=function(){(v.requestFullscreen||v.webkitEnterFullscreen||function(){}).call(v)};
+
+  /* Agregar */
+  $('btnAdd').onclick=function(){
+    var o=$('addBox').classList.toggle('open');$('btnAdd').setAttribute('aria-expanded',o);
+  };
+  $('btnPlay').onclick=function(){
+    var u=$('url').value.trim();if(!u)return;
+    play({name:u.replace(/^https?:\/\//,'').slice(0,60),url:u});
+  };
+  $('btnLoadList').onclick=function(){
+    var u=$('url').value.trim();if(!u)return;say('Descargando lista…');
+    fetch(u).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()})
+      .then(function(t){var a=parseM3U(t);if(!a.length)throw new Error('La lista está vacía o no es M3U');setChannels(a)})
+      .catch(function(e){say('No se pudo cargar la lista ('+e.message+'). Prueba abriendo el archivo o pegando el texto.',true)});
+  };
+  $('btnParse').onclick=function(){
+    var a=parseM3U($('paste').value);
+    if(!a.length){say('No encontré canales en ese texto.',true);return}
+    setChannels(a);$('paste').value='';
+  };
+  $('btnFile').onclick=function(){$('file').click()};
+  $('file').onchange=function(){
+    var f=this.files[0];if(!f)return;
+    var r=new FileReader();r.onload=function(){
+      var a=parseM3U(String(r.result));
+      if(!a.length){say('El archivo no tiene canales.',true);return}
+      setChannels(a);
+    };r.readAsText(f);this.value='';
+  };
+  $('btnClear').onclick=function(){channels=[];save('btv.channels',channels);render()};
+
+  $('q').oninput=render;
+  $('tabAll').onclick=function(){onlyFav=false;$('tabAll').setAttribute('aria-pressed',true);$('tabFav').setAttribute('aria-pressed',false);render()};
+  $('tabFav').onclick=function(){onlyFav=true;$('tabAll').setAttribute('aria-pressed',false);$('tabFav').setAttribute('aria-pressed',true);render()};
+
+  /* Instalar como app */
+  var deferred=null;
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e;$('btnInstall').hidden=false});
+  $('btnInstall').onclick=function(){if(!deferred)return;deferred.prompt();deferred=null;$('btnInstall').hidden=true};
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
+
+  render();
+})();
+</script>
+</body>
+</html>
