@@ -132,6 +132,14 @@ li .star.f{color:var(--fav)}
 
 <div class="scroll" id="scroll">
   <div class="add" id="addBox">
+    <div class="row wrap" id="sugg">
+      <button data-n="México" data-u="https://iptv-org.github.io/iptv/countries/mx.m3u">+ México</button>
+      <button data-n="Español" data-u="https://iptv-org.github.io/iptv/languages/spa.m3u">+ Español</button>
+      <button data-n="Noticias" data-u="https://iptv-org.github.io/iptv/categories/news.m3u">+ Noticias</button>
+      <button data-n="Deportes" data-u="https://iptv-org.github.io/iptv/categories/sports.m3u">+ Deportes</button>
+      <button data-n="Cultura" data-u="https://iptv-org.github.io/iptv/categories/culture.m3u">+ Cultura</button>
+      <button data-n="Infantil" data-u="https://iptv-org.github.io/iptv/categories/kids.m3u">+ Infantil</button>
+    </div>
     <input type="text" id="listName" placeholder="Nombre de la lista (ej. México)" autocomplete="off">
     <div class="row wrap">
       <button id="btnLoadList" class="pri">Cargar enlace como lista</button>
@@ -404,6 +412,14 @@ li .star.f{color:var(--fav)}
       .then(function(t){var a=parseM3U(t);if(!a.length)throw new Error('La lista está vacía o no es M3U');addList(a,$('listName').value||nameFromUrl(u));$('listName').value=''})
       .catch(function(e){say('No se pudo cargar la lista ('+e.message+'). Prueba abriendo el archivo o pegando el texto.',true,6000)});
   };
+  Array.prototype.forEach.call(document.querySelectorAll('#sugg button'),function(b){
+    b.onclick=function(){
+      say('Descargando '+b.dataset.n+'…');
+      fetch(b.dataset.u).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()})
+        .then(function(t){var a=parseM3U(t);if(!a.length)throw new Error('lista vacía');addList(a,b.dataset.n)})
+        .catch(function(e){say('No se pudo cargar ('+e.message+')',true,5000)});
+    };
+  });
   $('btnParse').onclick=function(){
     var a=parseM3U($('paste').value);
     if(!a.length){say('No encontré canales en ese texto.',true,3500);return}
