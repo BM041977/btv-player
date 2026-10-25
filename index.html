@@ -361,10 +361,12 @@ li .star.f{color:var(--fav)}
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(cur.url).then(done).catch(function(){$('castChan').textContent=cur.url})}
     else $('castChan').textContent=cur.url;
   };
+  try{history.replaceState({btv:1},'');history.pushState({btv:2},'')}catch(e){}
+  window.addEventListener('popstate',function(){try{history.pushState({btv:2},'')}catch(e){}});
   $('btnWvc').onclick=function(){
     if(!cur){$('castChan').textContent='Primero elige un canal.';return}
     var u=cur.url.replace(/^https?:\/\//,'');var sch=cur.url.indexOf('https')==0?'https':'http';
-    location.href='intent://'+u+'#Intent;scheme='+sch+';action=android.intent.action.VIEW;type=video/*;package=com.instantbits.cast.webvideo;end';
+    var a=document.createElement('a');a.rel='noopener';a.href='intent://'+u+'#Intent;scheme='+sch+';action=android.intent.action.VIEW;type=video/*;package=com.instantbits.cast.webvideo;end';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500);
   };
   $('btnShare').onclick=function(){
     if(!cur){say('Primero elige un canal.',true,3000);return}
