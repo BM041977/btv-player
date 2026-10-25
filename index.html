@@ -158,6 +158,9 @@ li .star.f{color:var(--fav)}
     <div class="row wrap">
       <button id="btnParse">Cargar texto pegado</button>
       <button id="btnFile">Abrir archivo .m3u</button>
+      <button id="btnCheck" class="pri">Revisar y ocultar caídos</button>
+      <button id="btnRestore">Mostrar ocultos</button>
+      <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="chkHttp" checked> Ocultar enlaces http (no abren aquí)</label>
       <button id="btnClear">Borrar lista activa</button>
     </div>
     <input type="file" id="file" accept=".m3u,.m3u8,.txt,audio/x-mpegurl,application/vnd.apple.mpegurl" hidden>
@@ -246,6 +249,12 @@ li .star.f{color:var(--fav)}
     }
     return out;
   }
+  var dead=load('btv.dead',{}),hideHttp=load('btv.hidehttp',true);
+  function usable(c){
+    if(dead[c.url])return false;
+    if(hideHttp&&location.protocol==='https:'&&/^http:\/\//i.test(c.url))return false;
+    return true;
+  }
   function uniq(arr){var seen={};return arr.filter(function(c){if(seen[c.url])return false;seen[c.url]=1;return true})}
   function addList(arr,name){
     arr=uniq(arr);name=(name||'').trim()||'Lista '+(lists.length+1);
@@ -276,7 +285,7 @@ li .star.f{color:var(--fav)}
   function render(){
     renderChips();
     var q=$('q').value.trim().toLowerCase();list.innerHTML='';
-    shown=current().filter(function(c){return !q||c.name.toLowerCase().indexOf(q)>=0});
+    shown=current().filter(function(c){return usable(c)&&(!q||c.name.toLowerCase().indexOf(q)>=0)});
     if(!shown.length){
       var e=document.createElement('li');e.className='empty';
       e.textContent=lists.length?(tab==='fav'?'Aún no marcas favoritos.':'Sin resultados.'):'Aún no hay canales. Toca “+ Listas” para cargar una.';
@@ -305,7 +314,7 @@ li .star.f{color:var(--fav)}
       hls=new Hls({lowLatencyMode:true,xhrSetup:function(x,url){if(ADS.test(url)){x.abort&&x.abort()}}});
       hls.loadSource(u);hls.attachMedia(v);
       hls.on(Hls.Events.MANIFEST_PARSED,function(){v.play().catch(function(){})});
-      hls.on(Hls.Events.ERROR,function(_,d){if(d.fatal)say('No se pudo reproducir. El servidor puede bloquearlo o el enlace ya no sirve.',true)});
+      hls.on(Hls.Events.ERROR,function(_,d){if(d.fatal){say('Canal caído u bloqueado: lo oculté. Pasa al siguiente.',true,4000);markDead(c)}});
     }else{v.src=u;v.play().catch(function(){})}
     save('btv.last',c);
     var items=list.children;
@@ -329,7 +338,37 @@ li .star.f{color:var(--fav)}
   $('btnPrev').onclick=function(){step(-1)};
   $('btnNext').onclick=function(){step(1)};
   v.addEventListener('playing',function(){say('')});
-  v.addEventListener('error',function(){if(!hls)say('No se pudo reproducir este enlace.',true)});
+  v.addEventListener('error',function(){if(!hls){say('Canal caído u bloqueado: lo oculté. Pasa al siguiente.',true,4000);if(cur)markDead(cur)}});
+  function markDead(c){if(!c||favs[c.url])return;dead[c.url]=1;save('btv.dead',dead);var y=$('scroll').scrollTop;render();$('scroll').scrollTop=y}
+  var checking=false;
+  $('chkHttp').checked=hideHttp;
+  $('chkHttp').onchange=function(){hideHttp=this.checked;save('btv.hidehttp',hideHttp);render()};
+  $('btnRestore').onclick=function(){dead={};save('btv.dead',dead);render();say('Canales ocultos restaurados',false,2500)};
+  $('btnCheck').onclick=function(){
+    if(checking){checking=false;return}
+    if(!(window.Hls&&Hls.isSupported())){say('Este navegador no permite revisar la lista.',true,4000);return}
+    var todo=current().filter(function(c){return usable(c)&&/\.m3u8(\?|$)/i.test(c.url)});
+    if(!todo.length){say('No hay canales para revisar aquí.',true,3000);return}
+    checking=true;$('btnCheck').textContent='Detener revisión';
+    $('addBox').classList.remove('open');$('btnAdd').setAttribute('aria-expanded',false);
+    var i=0,done=0,bad=0,total=todo.length;
+    function finish(){checking=false;$('btnCheck').textContent='Revisar y ocultar caídos';save('btv.dead',dead);render();say('Revisión lista: '+bad+' caídos ocultos de '+total,false,6000)}
+    function test(c,cb){
+      var h=new Hls({manifestLoadingMaxRetry:0,manifestLoadingTimeOut:7000,levelLoadingMaxRetry:0}),fin=false;
+      function end(ok){if(fin)return;fin=true;clearTimeout(t);try{h.destroy()}catch(e){}cb(ok)}
+      var t=setTimeout(function(){end(false)},9000);
+      h.on(Hls.Events.MANIFEST_PARSED,function(){end(true)});
+      h.on(Hls.Events.ERROR,function(_,d){if(d.fatal)end(false)});
+      try{h.loadSource(c.url)}catch(e){end(false)}
+    }
+    function next(){
+      if(!checking){finish();return}
+      if(i>=total){if(done>=total)finish();return}
+      var c=todo[i++];
+      test(c,function(ok){done++;if(!ok&&!favs[c.url]){dead[c.url]=1;bad++}say('Revisando '+done+' de '+total+' · caídos: '+bad);next()});
+    }
+    for(var k=0;k<5;k++)next();
+  };
 
   /* ---- Imagen en imagen, pantalla completa, transmitir ---- */
   function pip(){
