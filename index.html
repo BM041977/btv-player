@@ -69,7 +69,7 @@ li .star.f{color:var(--fav)}
 
 <div class="right">
   <div class="add" id="addBox">
-    <input type="text" id="url" placeholder="Enlace de video (.m3u8, .mp4) o de lista M3U" inputmode="url" autocomplete="off">
+    <div class="bar" style="flex-wrap:nowrap"><input type="text" id="url" placeholder="Enlace de video (.m3u8, .mp4) o de lista M3U" inputmode="url" enterkeyhint="go" autocomplete="off" style="flex:1;min-width:0"><button id="btnGo" class="pri">Ir ▶</button></div>
     <div class="bar">
       <button id="btnPlay" class="pri">Reproducir enlace</button>
       <button id="btnLoadList">Cargar como lista</button>
@@ -193,6 +193,7 @@ li .star.f{color:var(--fav)}
     var o=$('addBox').classList.toggle('open');$('btnAdd').setAttribute('aria-expanded',o);
   };
   $('url').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('btnPlay').click()}});
+  $('btnGo').onclick=function(){$('btnPlay').click()};
   $('btnPlay').onclick=function(){
     var u=$('url').value.trim();if(!u)return;
     if(/(youtube\.com|youtu\.be)/i.test(u)){say('Los enlaces de YouTube no se pueden reproducir aquí. Usa un enlace directo .m3u8 o .mp4.',true);return}
