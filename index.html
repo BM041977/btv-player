@@ -157,7 +157,8 @@ li .star.f{color:var(--fav)}
     <p><b>3. Roku y otras (Miracast):</b> en el Roku entra a Configuración &gt; Sistema &gt; Duplicación de pantalla y déjala en “Preguntar” o “Siempre permitir”. En el Cubot baja el panel rápido, toca <b>Transmitir</b> o <b>Smart View</b> y elige tu Roku en la lista.</p>
     <p><b>4. Para seguir usando el teléfono mientras la tele reproduce:</b> la duplicación muestra todo lo que haces. En su lugar, envía solo el enlace del canal a una app que transmita de verdad, como <b>Web Video Caster</b> (acepta Roku).</p>
     <div class="row wrap">
-      <button id="btnShare" class="pri">Enviar enlace a otra app</button>
+      <button id="btnWvc" class="pri">Abrir en Web Video Caster</button>
+      <button id="btnShare">Enviar enlace a otra app</button>
       <button id="btnCopy">Copiar enlace</button>
     </div>
     <small id="castChan"></small>
@@ -345,6 +346,11 @@ li .star.f{color:var(--fav)}
     var done=function(){$('castChan').textContent='Enlace copiado: '+cur.name};
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(cur.url).then(done).catch(function(){$('castChan').textContent=cur.url})}
     else $('castChan').textContent=cur.url;
+  };
+  $('btnWvc').onclick=function(){
+    if(!cur){$('castChan').textContent='Primero elige un canal.';return}
+    var u=cur.url.replace(/^https?:\/\//,'');var sch=cur.url.indexOf('https')==0?'https':'http';
+    location.href='intent://'+u+'#Intent;scheme='+sch+';action=android.intent.action.VIEW;type=video/*;package=com.instantbits.cast.webvideo;end';
   };
   $('btnShare').onclick=function(){
     if(!cur){say('Primero elige un canal.',true,3000);return}
