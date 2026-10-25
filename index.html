@@ -425,6 +425,15 @@ li .star.f{color:var(--fav)}
       .then(function(t){var a=parseM3U(t);if(!a.length)throw new Error('La lista está vacía o no es M3U');addList(a,$('listName').value||nameFromUrl(u));$('listName').value=''})
       .catch(function(e){say('No se pudo cargar la lista ('+e.message+'). Prueba abriendo el archivo o pegando el texto.',true,6000)});
   };
+  (function(){
+    var have={};Array.prototype.forEach.call(document.querySelectorAll('#sugg button'),function(b){have[b.dataset.u]=1});
+    var cats=[['animation','Animación'],['auto','Autos'],['business','Negocios'],['classic','Clásicos'],['comedy','Comedia'],['cooking','Cocina'],['education','Educación'],['entertainment','Entretenimiento'],['family','Familia'],['general','General'],['legislative','Legislativo'],['lifestyle','Estilo de vida'],['outdoor','Aire libre'],['public','Públicos'],['relax','Relax'],['religious','Religión'],['science','Ciencia'],['travel','Viajes'],['weather','Clima']];
+    var ctr=[['pe','Perú'],['cl','Chile'],['ve','Venezuela'],['ec','Ecuador'],['uy','Uruguay'],['py','Paraguay'],['bo','Bolivia'],['gt','Guatemala'],['hn','Honduras'],['sv','El Salvador'],['cr','Costa Rica'],['pa','Panamá'],['do','Rep. Dominicana'],['cu','Cuba'],['br','Brasil'],['uk','Reino Unido'],['fr','Francia'],['de','Alemania'],['it','Italia'],['ca','Canadá']];
+    var box=$('sugg');
+    function mk(path,name){var u='https://iptv-org.github.io/iptv/'+path+'.m3u';if(have[u])return;var b=document.createElement('button');b.dataset.n=name;b.dataset.u=u;b.textContent='+ '+name;box.appendChild(b)}
+    cats.forEach(function(c){mk('categories/'+c[0],c[1])});
+    ctr.forEach(function(c){mk('countries/'+c[0],c[1])});
+  })();
   Array.prototype.forEach.call(document.querySelectorAll('#sugg button'),function(b){
     b.onclick=function(){
       say('Descargando '+b.dataset.n+'…');
