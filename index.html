@@ -192,8 +192,10 @@ li .star.f{color:var(--fav)}
   $('btnAdd').onclick=function(){
     var o=$('addBox').classList.toggle('open');$('btnAdd').setAttribute('aria-expanded',o);
   };
+  $('url').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('btnPlay').click()}});
   $('btnPlay').onclick=function(){
     var u=$('url').value.trim();if(!u)return;
+    if(/(youtube\.com|youtu\.be)/i.test(u)){say('Los enlaces de YouTube no se pueden reproducir aquí. Usa un enlace directo .m3u8 o .mp4.',true);return}
     play({name:u.replace(/^https?:\/\//,'').slice(0,60),url:u});
   };
   $('btnLoadList').onclick=function(){
