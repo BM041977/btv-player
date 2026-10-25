@@ -78,6 +78,13 @@ li .star.f{color:var(--fav)}
   body:not(.hasvid){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:12px}
   body:not(.hasvid) header,body:not(.hasvid) .urlbar{grid-column:1/3}
 }
+.modal{position:fixed;inset:0;background:#000b;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal[hidden]{display:none}
+.modal .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;max-width:460px;max-height:86dvh;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.modal h2{margin:0;font-size:17px}
+.modal p{margin:0;color:var(--fg)}
+.modal small{color:var(--mut)}
+#btnCast.avail{color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
 .stage:fullscreen{max-height:none;border-radius:0;width:100vw;height:100vh;aspect-ratio:auto}
 </style>
 </head>
@@ -142,6 +149,16 @@ li .star.f{color:var(--fav)}
   <ul id="list"></ul>
 </div>
 
+<div class="modal" id="castHelp" hidden>
+  <div class="card" role="dialog" aria-label="Cómo transmitir">
+    <h2>Transmitir a una pantalla</h2>
+    <p><b>1.</b> La pantalla y el teléfono deben estar en la <b>misma red wifi</b>.</p>
+    <p><b>2. Chromecast, Google TV, Android TV:</b> toca el botón de transmitir. Chrome muestra la lista con el nombre de cada pantalla disponible. Si el botón se ve con aro azul, ya hay una cerca.</p>
+    <p><b>3. Roku y otras (Miracast):</b> en el Roku entra a Configuración &gt; Sistema &gt; Duplicación de pantalla y déjala en “Preguntar” o “Siempre permitir”. En el Cubot baja el panel rápido, toca <b>Transmitir</b> o <b>Smart View</b> y elige tu Roku en la lista.</p>
+    <small>Una página web no puede ver los Roku ni las pantallas Miracast. Esa lista solo la muestra Android, y duplica toda la pantalla del teléfono, no solo el video.</small>
+    <button id="btnCastClose" class="pri">Entendido</button>
+  </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.17/hls.min.js"></script>
 <script>
 (function(){
@@ -311,11 +328,27 @@ li .star.f{color:var(--fav)}
   }
   if(land.addEventListener)land.addEventListener('change',onRot);else land.addListener(onRot);
 
+  /* Transmitir: avisa si hay pantallas Chromecast / Google TV cerca y las muestra al tocar */
+  var casting=false;
+  function openHelp(){$('castHelp').hidden=false}
+  $('btnCastClose').onclick=function(){$('castHelp').hidden=true};
+  $('castHelp').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
+  if(v.remote&&v.remote.watchAvailability){
+    v.remote.watchAvailability(function(a){$('btnCast').classList.toggle('avail',!!a)}).catch(function(){});
+  }
+  if(v.remote&&v.remote.addEventListener){
+    v.remote.addEventListener('disconnect',function(){if(casting&&cur){casting=false;play(cur)}});
+  }
   $('btnCast').onclick=function(e){
     e.stopPropagation();showUI();
-    var help='Para transmitir: en Chrome toca ⋮ > Transmitir (Chromecast o Google TV). Para Roku usa “Smart View” o “Transmitir pantalla” de Android.';
-    if(v.remote&&v.remote.prompt){v.remote.prompt().catch(function(){say(help,true,7000)})}
-    else say(help,true,7000);
+    if(!(v.remote&&v.remote.prompt)){openHelp();return}
+    /* Para transmitir, el video debe ir directo por su enlace (no por el reproductor interno) */
+    if(hls&&cur){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
+    v.remote.prompt().then(function(){say('Transmitiendo…',false,2500)})
+      .catch(function(){
+        if(casting&&cur&&v.remote.state!=='connected'){casting=false;play(cur)}
+        openHelp();
+      });
   };
 
   /* ---- Agregar listas ---- */
