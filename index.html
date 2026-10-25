@@ -139,6 +139,14 @@ li .star.f{color:var(--fav)}
       <button data-n="Noticias" data-u="https://iptv-org.github.io/iptv/categories/news.m3u">+ Noticias</button>
       <button data-n="Deportes" data-u="https://iptv-org.github.io/iptv/categories/sports.m3u">+ Deportes</button>
       <button data-n="Cultura" data-u="https://iptv-org.github.io/iptv/categories/culture.m3u">+ Cultura</button>
+      <button data-n="Música" data-u="https://iptv-org.github.io/iptv/categories/music.m3u">+ Música</button>
+      <button data-n="Películas" data-u="https://iptv-org.github.io/iptv/categories/movies.m3u">+ Películas</button>
+      <button data-n="Series" data-u="https://iptv-org.github.io/iptv/categories/series.m3u">+ Series</button>
+      <button data-n="Documentales" data-u="https://iptv-org.github.io/iptv/categories/documentary.m3u">+ Documentales</button>
+      <button data-n="EE.UU." data-u="https://iptv-org.github.io/iptv/countries/us.m3u">+ EE.UU.</button>
+      <button data-n="España" data-u="https://iptv-org.github.io/iptv/countries/es.m3u">+ España</button>
+      <button data-n="Colombia" data-u="https://iptv-org.github.io/iptv/countries/co.m3u">+ Colombia</button>
+      <button data-n="Argentina" data-u="https://iptv-org.github.io/iptv/countries/ar.m3u">+ Argentina</button>
       <button data-n="Infantil" data-u="https://iptv-org.github.io/iptv/categories/kids.m3u">+ Infantil</button>
     </div>
     <input type="text" id="listName" placeholder="Nombre de la lista (ej. México)" autocomplete="off">
@@ -376,14 +384,16 @@ li .star.f{color:var(--fav)}
   };
   $('btnCastClose').onclick=function(){$('castHelp').hidden=true};
   $('castHelp').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
+  var castAvail=false;
   if(v.remote&&v.remote.watchAvailability){
-    v.remote.watchAvailability(function(a){$('btnCast').classList.toggle('avail',!!a)}).catch(function(){});
+    v.remote.watchAvailability(function(a){castAvail=!!a;$('btnCast').classList.toggle('avail',!!a)}).catch(function(){});
   }
   if(v.remote&&v.remote.addEventListener){
     v.remote.addEventListener('disconnect',function(){if(casting&&cur){casting=false;play(cur)}});
   }
   $('btnCast').onclick=function(e){
     e.stopPropagation();showUI();
+    if(cur&&!castAvail){$('btnWvc').click();return}
     if(!(v.remote&&v.remote.prompt)){openHelp();return}
     /* Para transmitir, el video debe ir directo por su enlace (no por el reproductor interno) */
     if(hls&&cur){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
