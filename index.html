@@ -95,7 +95,7 @@ li .star.f{color:var(--fav)}
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v36</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v37</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -108,7 +108,6 @@ li .star.f{color:var(--fav)}
 <div class="fixed">
   <div class="stage ui" id="stage">
     <video id="v" playsinline autopictureinpicture></video>
-    <button class="quick" id="btnQuick" hidden>Abrir en WVC</button>
     <div class="ov">
       <button class="ib tr" id="btnFull" aria-label="Pantalla completa"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
       <button class="ib tr2" id="btnPip" aria-label="Imagen en imagen"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="12" y="11" width="8" height="6" rx="1" fill="currentColor"/></svg></button>
@@ -473,22 +472,19 @@ li .star.f{color:var(--fav)}
     v.remote.addEventListener('connect',function(){$('btnCast').classList.add('on');say('Transmitiendo a la pantalla. Toca el botón otra vez para desconectar.',false,4000)});
     v.remote.addEventListener('disconnect',function(){$('btnCast').classList.remove('on');say('Transmisión terminada',false,2500);if(casting&&cur){casting=false;play(cur)}});
   }
-  var quickT=null;
-  function showQuick(t){var q=$('btnQuick');q.hidden=false;clearTimeout(quickT);quickT=setTimeout(function(){q.hidden=true},t||9000)}
-  $('btnQuick').onclick=function(e){e.stopPropagation();this.hidden=true;$('btnWvc').click()};
+  function showQuick(){}
   $('btnCast').onclick=function(e){
     e.stopPropagation();showUI();
     if(!cur){say('Primero elige un canal.',true,3000);return}
-    if(!(v.remote&&v.remote.prompt)){showQuick(12000);return}
+    if(!(v.remote&&v.remote.prompt)){say('Este navegador no permite transmitir. Usa Chrome.',true,4000);return}
     if(v.remote.state==='connected'||v.remote.state==='connecting'){v.remote.prompt().catch(function(){});return}
     /* Para transmitir, el video debe ir directo por su enlace (no por el reproductor interno) */
     if(hls){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
-    v.remote.prompt().then(function(){$('btnQuick').hidden=true;say('Transmitiendo…',false,2500)})
+    v.remote.prompt().then(function(){say('Transmitiendo…',false,2500)})
       .catch(function(err){
         if(casting&&v.remote.state!=='connected'){casting=false;play(cur)}
         var n=(err&&err.name)||'error';
-        if(n!=='NotAllowedError')say('No hay pantalla directa para este canal. Puedes usar WVC.',true,4000);
-        showQuick(12000);
+        if(n!=='NotAllowedError')say('Chrome no encuentra tu Chromecast. Revisa que esté encendido y en el mismo wifi.',true,5000);
       });
   };
 
