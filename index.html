@@ -478,7 +478,7 @@ li .star.f{color:var(--fav)}
     b.onclick=function(){
       say('Descargando '+b.dataset.n+'…');
       fetch(b.dataset.u).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()})
-        .then(function(t){var a=parseM3U(t);if(!a.length)throw new Error('lista vacía');addList(a,b.dataset.n)})
+        .then(function(t){var a=parseM3U(t);if(!a.length)throw new Error('lista vacía');addList(a,b.dataset.n);setTimeout(function(){if(!checking)$('btnCheck').click()},800)})
         .catch(function(e){say('No se pudo cargar ('+e.message+')',true,5000)});
     };
   });
