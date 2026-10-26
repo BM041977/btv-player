@@ -42,6 +42,8 @@ video{width:100%;height:100%;display:block;background:#000;object-fit:contain}
 .ov .tr{top:8px;right:8px}
 .ov .tr2{top:8px;right:54px}
 .ov .tr3{top:8px;right:100px}
+.quick{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:5;background:var(--acc);color:#001;border:0;border-radius:20px;padding:10px 16px;font-weight:700;pointer-events:auto}
+.quick[hidden]{display:none}
 .ov .prv{top:50%;left:calc(50% - 70px);transform:translate(-50%,-50%);width:46px;height:46px;font-size:18px}
 .ov .nxt{top:50%;left:calc(50% + 70px);transform:translate(-50%,-50%);width:46px;height:46px;font-size:18px}
 .ov .mid{top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;font-size:20px}
@@ -106,6 +108,7 @@ li .star.f{color:var(--fav)}
 <div class="fixed">
   <div class="stage ui" id="stage">
     <video id="v" playsinline autopictureinpicture></video>
+    <button class="quick" id="btnQuick" hidden>Abrir en Web Video Caster</button>
     <div class="ov">
       <button class="ib tr" id="btnFull" aria-label="Pantalla completa"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
       <button class="ib tr2" id="btnPip" aria-label="Imagen en imagen"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="12" y="11" width="8" height="6" rx="1" fill="currentColor"/></svg></button>
@@ -461,20 +464,26 @@ li .star.f{color:var(--fav)}
     v.remote.addEventListener('connect',function(){$('btnCast').classList.add('on');say('Transmitiendo a la pantalla. Toca el botón otra vez para desconectar.',false,4000)});
     v.remote.addEventListener('disconnect',function(){$('btnCast').classList.remove('on');say('Transmisión terminada',false,2500);if(casting&&cur){casting=false;play(cur)}});
   }
+  var quickT=null;
+  function showQuick(t){var q=$('btnQuick');q.hidden=false;clearTimeout(quickT);quickT=setTimeout(function(){q.hidden=true},t||9000)}
+  $('btnQuick').onclick=function(e){e.stopPropagation();this.hidden=true;$('btnWvc').click()};
   $('btnCast').onclick=function(e){
     e.stopPropagation();showUI();
-    if(!(v.remote&&v.remote.prompt)){if(cur)$('btnWvc').click();else openHelp();return}
-    /* Ya conectado: el selector de Chrome ofrece desconectar */
+    if(!cur){say('Primero elige un canal.',true,3000);return}
+    if(!castAvail||!(v.remote&&v.remote.prompt)){$('btnWvc').click();return} /* no hay pantalla directa: Web Video Caster */
     if(v.remote.state==='connected'||v.remote.state==='connecting'){v.remote.prompt().catch(function(){});return}
-    /* Para transmitir, el video debe ir directo por su enlace (no por el reproductor interno) */
-    if(hls&&cur){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
-    v.remote.prompt().then(function(){say('Transmitiendo…',false,2500)})
-      .catch(function(e){
-        if(casting&&cur&&v.remote.state!=='connected'){casting=false;play(cur)}
-        var n=(e&&e.name)||'error';
-        if(n==='NotAllowedError'&&v.remote.state!=='connected'&&!castGesture)return; /* cerró el selector */
-        say('Directo no disponible ('+n+'). Abriendo Web Video Caster…',false,2500);
-        setTimeout(function(){$('btnWvc').click()},700);
+    var settled=false,wd=null;
+    function restore(){if(casting&&v.remote.state!=='connected'){casting=false;play(cur)}}
+    if(hls){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
+    say('Elige tu pantalla…',false,6000);
+    /* Si Chrome no responde en unos segundos, ofrecer Web Video Caster con un toque */
+    wd=setTimeout(function(){if(!settled&&v.remote.state!=='connected')showQuick(12000)},3500);
+    v.remote.prompt().then(function(){settled=true;clearTimeout(wd);$('btnQuick').hidden=true})
+      .catch(function(err){
+        settled=true;clearTimeout(wd);restore();
+        var n=(err&&err.name)||'error';
+        say('Directo no disponible ('+n+').',true,4000);
+        showQuick(12000);
       });
   };
 
