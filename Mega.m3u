@@ -1,0 +1,75 @@
+#EXTM3U
+#EXTINF:-1 group-title="Nacionales",ADN 40
+https://mdstrm.com/live-stream-playlist/60b578b060947317de7b57ac.m3u8
+#EXTINF:-1 group-title="Nacionales",Imagen Televisión
+https://igd-it-runtime.otteravision.com/igd/it/it.m3u8
+#EXTINF:-1 group-title="Nacionales",Justicia TV
+https://live-scjn.ovp-vivaro.digital/ovp-origin/638a22b47746d/playlist.m3u8
+#EXTINF:-1 group-title="Nacionales",Las Estrellas
+https://channel01-onlymex.akamaized.net/hls/live/2022749/event01/index.m3u8
+#EXTINF:-1 group-title="Nacionales",Milenio
+https://jmp2.uk/plu-652e922db4b047000825f975.m3u8
+#EXTINF:-1 group-title="Nacionales",Milenio (2)
+https://epg.provider.plex.tv/library/parts/608049aefa2b8ae93c2c3a63-65b16e7b115f5ad5450cfdac/?X-Plex-Token=cTnhNqxLknrr2dCnuZab
+#EXTINF:-1 group-title="Nacionales",Once
+https://vivo.canaloncelive.tv/securepkgr3/oncemexico/playlist.m3u8
+#EXTINF:-1 group-title="Nacionales",Once (2)
+https://vivo.canaloncelive.tv/secureoncedos/oncedigital/playlist.m3u8
+#EXTINF:-1 group-title="Nacionales",Telefórmula
+https://jmp2.uk/plu-63d2c140c111bc0008cb890b.m3u8
+#EXTINF:-1 group-title="Nacionales",Telefórmula (2)
+https://mdstrm.com/live-stream-playlist/62f2c855f7981b5a5a2d8763.m3u8
+#EXTINF:-1 group-title="Entretenimiento",Comedy Central
+https://jmp2.uk/plu-64f8a408bd341e000818fcda.m3u8
+#EXTINF:-1 group-title="Deportes",AYM Sports
+https://epg.provider.plex.tv/library/parts/608049aefa2b8ae93c2c3a63-63f0c8c6a9c2ebc9d406dda0/?X-Plex-Token=cTnhNqxLknrr2dCnuZab
+#EXTINF:-1 group-title="Documentales y cultura",Discovery Turbo
+https://jmp2.uk/plu-6400f731d200410008f9b339.m3u8
+#EXTINF:-1 group-title="Documentales y cultura",Discovery Turbo (2)
+https://live-manifest.production-public.tubi.io/live/e7be5ad5-9044-4151-95d4-a9aae10ab0a5/playlist.m3u8
+#EXTINF:-1 group-title="Documentales y cultura",EWTN
+https://hls.iptvservice.eu/hls/ewtn-hd.m3u8
+#EXTINF:-1 group-title="Documentales y cultura",María Visión
+https://1601580044.rsc.cdn77.org/live/_jcn_/amlst:Mariavision/master.m3u8
+#EXTINF:-1 group-title="Documentales y cultura",María Visión (2)
+https://1601580044.rsc.cdn77.org/live/_jcn_/amls:CHANNEL_2/playlist.m3u8
+#EXTINF:-1 group-title="Niños y familiar",Baby First
+https://cdn.fast.jwp.services/v1/channel/1_jB6940Ei_TvhvIHDL/manifest.m3u8
+#EXTINF:-1 group-title="Música",Quiero TV
+https://stream.ontvmx.com/ontv/ghxTYEQmKkB2UJyVuW/playlist.m3u8
+#EXTINF:-1 group-title="Música",VR+
+https://epg.provider.plex.tv/library/parts/608049aefa2b8ae93c2c3a63-65a1d3996475bf522f9256e3/?X-Plex-Token=cTnhNqxLknrr2dCnuZab
+#EXTINF:-1 group-title="Internacionales",CNN
+https://jmp2.uk/stvp-ES34000039I
+#EXTINF:-1 group-title="Internacionales",CNN (2)
+https://amg00803-cnnfast-amg00803c3-lg-es-5477.playouts.now.amagi.tv/playlist.m3u8
+#EXTINF:-1 group-title="Internacionales",DW América
+https://jmp2.uk/stvp-ES1300001QC
+#EXTINF:-1 group-title="Internacionales",DW América (2)
+https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/index.m3u8
+#EXTINF:-1 group-title="Internacionales",DW América (3)
+https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8
+#EXTINF:-1 group-title="Internacionales",DW Latinoamérica
+https://jmp2.uk/stvp-ES1300001QC
+#EXTINF:-1 group-title="Internacionales",DW Latinoamérica (2)
+https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/index.m3u8
+#EXTINF:-1 group-title="Internacionales",DW Latinoamérica (3)
+https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8
+#EXTINF:-1 group-title="Internacionales",Fox News
+http://247preview.foxnews.com/hls/live/2020027/fncv3preview/primary.m3u8
+#EXTINF:-1 group-title="Internacionales",TV5 Monde
+https://ott.tv5monde.com/Content/HLS/Live/channel(fbs)/variant.m3u8
+#EXTINF:-1 group-title="Internacionales",TVE
+https://jmp2.uk/stvp-ESBC4100001NZ
+#EXTINF:-1 group-title="Internacionales",TVE (2)
+https://ztnr.rtve.es/ztnr/1694255.m3u8
+#EXTINF:-1 group-title="Internacionales",TVE (3)
+https://ztnr.rtve.es/ztnr/1688877.m3u8
+#EXTINF:-1 group-title="Internacionales",TVE (4)
+https://mdstrm.com/live-stream-playlist/689ba606ecfe7915e1f8f741.m3u8
+#EXTINF:-1 group-title="Internacionales",TVE (5)
+https://rtvelivestream.rtve.es/rtvesec/la1/la1_main_dvr.m3u8
+#EXTINF:-1 group-title="Internacionales",TVE (6)
+https://rtvelivestream.rtve.es/rtvesec/cat/la1_cat_main_dvr.m3u8
+#EXTINF:-1 group-title="Internacionales",TVE (7)
+https://rtvelivestream.rtve.es/rtvesec/can/la1_can_main_dvr.m3u8
