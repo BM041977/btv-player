@@ -452,7 +452,7 @@ li .star.f{color:var(--fav)}
   };
   $('btnCastClose').onclick=function(){$('castHelp').hidden=true};
   $('castHelp').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
-  var castAvail=false;
+  var castAvail=false,castGesture=false;
   if(v.remote&&v.remote.watchAvailability){
     v.remote.watchAvailability(function(a){castAvail=!!a;$('btnCast').classList.toggle('avail',!!a)}).catch(function(){});
   }
@@ -472,7 +472,9 @@ li .star.f{color:var(--fav)}
       .catch(function(e){
         if(casting&&cur&&v.remote.state!=='connected'){casting=false;play(cur)}
         var n=(e&&e.name)||'error';
-        openHelp();$('castErr').textContent='Chrome no pudo transmitir directo (error: '+n+'). Usa una de estas opciones:';
+        if(n==='NotAllowedError'&&v.remote.state!=='connected'&&!castGesture)return; /* cerró el selector */
+        say('Directo no disponible ('+n+'). Abriendo Web Video Caster…',false,2500);
+        setTimeout(function(){$('btnWvc').click()},700);
       });
   };
 
