@@ -460,14 +460,15 @@ li .star.f{color:var(--fav)}
   }
   $('btnCast').onclick=function(e){
     e.stopPropagation();showUI();
-    if(cur&&!castAvail){$('btnWvc').click();return}
-    if(!(v.remote&&v.remote.prompt)){openHelp();return}
+    if(!(v.remote&&v.remote.prompt)){if(cur)$('btnWvc').click();else openHelp();return}
     /* Para transmitir, el video debe ir directo por su enlace (no por el reproductor interno) */
     if(hls&&cur){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
     v.remote.prompt().then(function(){say('Transmitiendo…',false,2500)})
-      .catch(function(){
+      .catch(function(e){
+        var wasCast=casting;
         if(casting&&cur&&v.remote.state!=='connected'){casting=false;play(cur)}
-        openHelp();
+        if(e&&e.name==='NotAllowedError')return; /* el usuario cerró el selector */
+        if(cur){$('btnWvc').click()}else openHelp();
       });
   };
 
