@@ -258,7 +258,7 @@ li .star.f{color:var(--fav)}
     }
     return out;
   }
-  var dead=load('btv.dead',{}),hideHttp=load('btv.hidehttp',true);
+  var dead=load('btv.dead2',{}),hideHttp=load('btv.hidehttp',true);
   function usable(c){
     if(dead[c.url])return false;
     if(hideHttp&&location.protocol==='https:'&&/^http:\/\//i.test(c.url))return false;
@@ -316,14 +316,18 @@ li .star.f{color:var(--fav)}
   var ADS=/(doubleclick|googlesyndication|googleadservices|adservice\.google|imasdk|moatads|adnxs|adsrvr|scorecardresearch|taboola|outbrain|popads|propellerads)/i;
   function setNow(t){now.textContent=t;now.className='now'}
 
+  function canNative(){return !!(v.canPlayType&&v.canPlayType('application/vnd.apple.mpegurl'))}
   function play(c){
+    c._nat=0;
     cur=c;setNow(c.name);say('Cargando…');stop();document.body.classList.add('hasvid');
     var u=c.url,isHls=/\.m3u8(\?|$)/i.test(u)||/\/hls\//i.test(u);
     if(isHls&&window.Hls&&Hls.isSupported()){
       hls=new Hls({lowLatencyMode:true,xhrSetup:function(x,url){if(ADS.test(url)){x.abort&&x.abort()}}});
       hls.loadSource(u);hls.attachMedia(v);
       hls.on(Hls.Events.MANIFEST_PARSED,function(){v.play().catch(function(){})});
-      hls.on(Hls.Events.ERROR,function(_,d){if(d.fatal){say('Canal caído u bloqueado: lo oculté. Pasa al siguiente.',true,4000);markDead(c)}});
+      hls.on(Hls.Events.ERROR,function(_,d){if(!d.fatal||cur!==c)return;
+        if(canNative()&&!c._nat){c._nat=1;stop();v.src=u;v.play().catch(function(){});say('Probando otro método…');return}
+        say('Canal caído o bloqueado. Pasa al siguiente.',true,4000);markDead(c)});
     }else{v.src=u;v.play().catch(function(){})}
     save('btv.last',c);
     var items=list.children;
@@ -347,12 +351,12 @@ li .star.f{color:var(--fav)}
   $('btnPrev').onclick=function(){step(-1)};
   $('btnNext').onclick=function(){step(1)};
   v.addEventListener('playing',function(){say('')});
-  v.addEventListener('error',function(){if(!hls){say('Canal caído u bloqueado: lo oculté. Pasa al siguiente.',true,4000);if(cur)markDead(cur)}});
-  function markDead(c){if(!c||favs[c.url])return;dead[c.url]=1;save('btv.dead',dead);var y=$('scroll').scrollTop;render();$('scroll').scrollTop=y}
+  v.addEventListener('error',function(){if(!hls){say('Canal caído o bloqueado. Pasa al siguiente.',true,4000);if(cur)markDead(cur)}});
+  function markDead(c){if(!c||favs[c.url])return;dead[c.url]=1;save('btv.dead2',dead);var y=$('scroll').scrollTop;render();$('scroll').scrollTop=y}
   var checking=false;
   $('chkHttp').checked=hideHttp;
   $('chkHttp').onchange=function(){hideHttp=this.checked;save('btv.hidehttp',hideHttp);render()};
-  $('btnRestore').onclick=function(){dead={};save('btv.dead',dead);render();say('Canales ocultos restaurados',false,2500)};
+  $('btnRestore').onclick=function(){dead={};save('btv.dead2',dead);render();say('Canales ocultos restaurados',false,2500)};
   $('btnCheck').onclick=function(){
     if(checking){checking=false;return}
     if(!(window.Hls&&Hls.isSupported())){say('Este navegador no permite revisar la lista.',true,4000);return}
@@ -361,7 +365,7 @@ li .star.f{color:var(--fav)}
     checking=true;$('btnCheck').textContent='Detener revisión';
     $('addBox').classList.remove('open');$('btnAdd').setAttribute('aria-expanded',false);
     var i=0,done=0,bad=0,total=todo.length;
-    function finish(){checking=false;$('btnCheck').textContent='Revisar y ocultar caídos';save('btv.dead',dead);render();say('Revisión lista: '+bad+' caídos ocultos de '+total,false,6000)}
+    function finish(){checking=false;$('btnCheck').textContent='Revisar y ocultar caídos';save('btv.dead2',dead);render();say('Revisión lista: '+bad+' caídos ocultos de '+total,false,6000)}
     function test(c,cb){
       var h=new Hls({manifestLoadingMaxRetry:0,manifestLoadingTimeOut:7000,levelLoadingMaxRetry:0}),fin=false;
       function end(ok){if(fin)return;fin=true;clearTimeout(t);try{h.destroy()}catch(e){}cb(ok)}
@@ -370,13 +374,22 @@ li .star.f{color:var(--fav)}
       h.on(Hls.Events.ERROR,function(_,d){if(d.fatal)end(false)});
       try{h.loadSource(c.url)}catch(e){end(false)}
     }
+    function testNative(c,cb){
+      if(!canNative()){cb(false);return}
+      var x=document.createElement('video'),fin=false;x.muted=true;x.preload='metadata';
+      function end(ok){if(fin)return;fin=true;clearTimeout(t);x.removeAttribute('src');try{x.load()}catch(e){}cb(ok)}
+      var t=setTimeout(function(){end(false)},10000);
+      x.onloadedmetadata=function(){end(true)};x.onerror=function(){end(false)};
+      x.src=c.url;
+    }
+    function testBoth(c,cb){test(c,function(ok){if(ok)cb(true);else testNative(c,cb)})}
     function next(){
       if(!checking){finish();return}
       if(i>=total){if(done>=total)finish();return}
       var c=todo[i++];
-      test(c,function(ok){done++;if(!ok&&!favs[c.url]){dead[c.url]=1;bad++}say('Revisando '+done+' de '+total+' · caídos: '+bad);next()});
+      testBoth(c,function(ok){done++;if(!ok&&!favs[c.url]){dead[c.url]=1;bad++}say('Revisando '+done+' de '+total+' · caídos: '+bad);next()});
     }
-    for(var k=0;k<5;k++)next();
+    for(var k=0;k<3;k++)next();
   };
 
   /* ---- Imagen en imagen, pantalla completa, transmitir ---- */
