@@ -42,8 +42,6 @@ video{width:100%;height:100%;display:block;background:#000;object-fit:contain}
 .ov .tr{top:8px;right:8px}
 .ov .tr2{top:8px;right:54px}
 .ov .tr3{top:8px;right:100px}
-.quick{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:5;background:var(--acc);color:#001;border:0;border-radius:16px;padding:6px 12px;font-size:12px;font-weight:700;pointer-events:auto;white-space:nowrap}
-.quick[hidden]{display:none}
 .ov .prv{top:50%;left:calc(50% - 70px);transform:translate(-50%,-50%);width:46px;height:46px;font-size:18px}
 .ov .nxt{top:50%;left:calc(50% + 70px);transform:translate(-50%,-50%);width:46px;height:46px;font-size:18px}
 .ov .mid{top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;font-size:20px}
@@ -88,14 +86,13 @@ li .star.f{color:var(--fav)}
 .modal h2{margin:0;font-size:17px}
 .modal p{margin:0;color:var(--fg)}
 .modal small{color:var(--mut)}
-#btnCast.on{background:var(--acc);color:#001}
 #btnCast.avail{color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
 .stage:fullscreen{max-height:none;border-radius:0;width:100vw;height:100vh;aspect-ratio:auto}
 </style>
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v37</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v20</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -194,16 +191,17 @@ li .star.f{color:var(--fav)}
 <div class="modal" id="castHelp" hidden>
   <div class="card" role="dialog" aria-label="Cómo transmitir">
     <h2>Transmitir a una pantalla</h2>
-    <p id="castErr" style="color:var(--acc)"></p>
+    <p><b>1.</b> La pantalla y el teléfono deben estar en la <b>misma red wifi</b>.</p>
+    <p><b>2. Chromecast, Google TV, Android TV:</b> toca el botón de transmitir. Chrome muestra la lista con el nombre de cada pantalla disponible. Si el botón se ve con aro azul, ya hay una cerca.</p>
+    <p><b>3. Roku y otras (Miracast):</b> en el Roku entra a Configuración &gt; Sistema &gt; Duplicación de pantalla y déjala en “Preguntar” o “Siempre permitir”. En el Cubot baja el panel rápido, toca <b>Transmitir</b> o <b>Smart View</b> y elige tu Roku en la lista.</p>
+    <p><b>4. Para seguir usando el teléfono mientras la tele reproduce:</b> la duplicación muestra todo lo que haces. En su lugar, envía solo el enlace del canal a una app que transmita de verdad, como <b>Web Video Caster</b> (acepta Roku).</p>
     <div class="row wrap">
       <button id="btnWvc" class="pri">Abrir en Web Video Caster</button>
       <button id="btnShare">Enviar enlace a otra app</button>
       <button id="btnCopy">Copiar enlace</button>
     </div>
     <small id="castChan"></small>
-    <p><b>Transmisión directa (Chromecast, Google TV, Android TV):</b> toca el botón de transmitir. Si se ve con aro azul, Chrome detectó una pantalla cerca.</p>
-    <p><b>Roku y proyectores (Miracast / Web Video Caster):</b> con Web Video Caster envías solo el canal y sigues usando el teléfono. La duplicación del panel rápido (Smart View) muestra todo lo que haces.</p>
-    <p><small>Ambos dispositivos deben estar en la misma red wifi.</small></p>
+    <small>Una página web no puede ver los Roku ni las pantallas Miracast. Esa lista solo la muestra Android, y duplica toda la pantalla del teléfono, no solo el video.</small>
     <button id="btnCastClose" class="pri">Entendido</button>
   </div>
 </div>
@@ -325,17 +323,11 @@ li .star.f{color:var(--fav)}
   function setNow(t){now.textContent=t;now.className='now'}
 
   function canNative(){return !!(v.canPlayType&&v.canPlayType('application/vnd.apple.mpegurl'))}
-  function isHlsUrl(u){return /\.m3u8(\?|$)/i.test(u)||/\/hls\//i.test(u)}
-  function play(c,fb){
-    if(!fb){c._nat=0;c._hjs=0}
-    c._played=false;
+  function play(c){
+    c._nat=0;
     cur=c;setNow(c.name);say('Cargando…');stop();document.body.classList.add('hasvid');
     var u=c.url,isHls=/\.m3u8(\?|$)/i.test(u)||/\/hls\//i.test(u);
-    if(isHls&&canNative()&&!c._hjs){
-      /* Reproductor del teléfono primero: así Chrome detecta la pantalla y se activa el aro azul de transmitir */
-      c._nat=1;v.src=u;v.play().catch(function(){});
-      setTimeout(function(){if(cur===c&&!c._played&&c._nat&&!c._hjs&&window.Hls&&Hls.isSupported()){c._hjs=1;play(c,true)}},9000);
-    }else if(isHls&&window.Hls&&Hls.isSupported()){
+    if(isHls&&window.Hls&&Hls.isSupported()){
       hls=new Hls({lowLatencyMode:true,xhrSetup:function(x,url){if(ADS.test(url)){x.abort&&x.abort()}}});
       hls.loadSource(u);hls.attachMedia(v);
       hls.on(Hls.Events.MANIFEST_PARSED,function(){v.play().catch(function(){})});
@@ -364,8 +356,8 @@ li .star.f{color:var(--fav)}
   $('btnOvNext').onclick=function(e){e.stopPropagation();step(1);showUI()};
   $('btnPrev').onclick=function(){step(-1)};
   $('btnNext').onclick=function(){step(1)};
-  v.addEventListener('playing',function(){if(cur)cur._played=true;say('')});
-  v.addEventListener('error',function(){if(!hls){if(cur&&cur._nat&&!cur._hjs&&isHlsUrl(cur.url)&&window.Hls&&Hls.isSupported()){cur._hjs=1;play(cur,true);return}say('Canal caído o bloqueado. Pasa al siguiente.',true,4000);if(cur)markDead(cur)}});
+  v.addEventListener('playing',function(){say('')});
+  v.addEventListener('error',function(){if(!hls){say('Canal caído o bloqueado. Pasa al siguiente.',true,4000);if(cur)markDead(cur)}});
   function markDead(c){if(!c||favs[c.url])return;dead[c.url]=1;save('btv.dead2',dead);var y=$('scroll').scrollTop;render();$('scroll').scrollTop=y}
   var checking=false;
   $('chkHttp').checked=hideHttp;
@@ -436,7 +428,6 @@ li .star.f{color:var(--fav)}
   /* Transmitir: avisa si hay pantallas Chromecast / Google TV cerca y las muestra al tocar */
   var casting=false;
   function openHelp(){
-    $('castErr').textContent='';
     $('castChan').textContent=cur?('Canal actual: '+cur.name):'Primero elige un canal para poder enviar su enlace.';
     $('castHelp').hidden=false;
   }
@@ -452,9 +443,6 @@ li .star.f{color:var(--fav)}
     if(!cur){$('castChan').textContent='Primero elige un canal.';return}
     var u=cur.url.replace(/^https?:\/\//,'');var sch=cur.url.indexOf('https')==0?'https':'http';
     var a=document.createElement('a');a.rel='noopener';a.href='intent://'+u+'#Intent;scheme='+sch+';action=android.intent.action.VIEW;type=video/*;package=com.instantbits.cast.webvideo;end';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500);
-    setTimeout(function(){
-      if(!document.hidden&&document.hasFocus()){say('No se abrió Web Video Caster. Prueba “Enviar enlace a otra app” y elígelo ahí.',true,6000);openHelp();$('castErr').textContent='Web Video Caster no respondió. Usa “Enviar enlace a otra app” o “Copiar enlace”.'}
-    },1800);
   };
   $('btnShare').onclick=function(){
     if(!cur){say('Primero elige un canal.',true,3000);return}
@@ -463,28 +451,23 @@ li .star.f{color:var(--fav)}
   };
   $('btnCastClose').onclick=function(){$('castHelp').hidden=true};
   $('castHelp').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
-  var castAvail=false,castGesture=false;
+  var castAvail=false;
   if(v.remote&&v.remote.watchAvailability){
     v.remote.watchAvailability(function(a){castAvail=!!a;$('btnCast').classList.toggle('avail',!!a)}).catch(function(){});
   }
   if(v.remote&&v.remote.addEventListener){
-    v.remote.addEventListener('connecting',function(){say('Conectando con la pantalla…')});
-    v.remote.addEventListener('connect',function(){$('btnCast').classList.add('on');say('Transmitiendo a la pantalla. Toca el botón otra vez para desconectar.',false,4000)});
-    v.remote.addEventListener('disconnect',function(){$('btnCast').classList.remove('on');say('Transmisión terminada',false,2500);if(casting&&cur){casting=false;play(cur)}});
+    v.remote.addEventListener('disconnect',function(){if(casting&&cur){casting=false;play(cur)}});
   }
-  function showQuick(){}
   $('btnCast').onclick=function(e){
     e.stopPropagation();showUI();
-    if(!cur){say('Primero elige un canal.',true,3000);return}
-    if(!(v.remote&&v.remote.prompt)){say('Este navegador no permite transmitir. Usa Chrome.',true,4000);return}
-    if(v.remote.state==='connected'||v.remote.state==='connecting'){v.remote.prompt().catch(function(){});return}
+    if(cur&&!castAvail){$('btnWvc').click();return}
+    if(!(v.remote&&v.remote.prompt)){openHelp();return}
     /* Para transmitir, el video debe ir directo por su enlace (no por el reproductor interno) */
-    if(hls){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
+    if(hls&&cur){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
     v.remote.prompt().then(function(){say('Transmitiendo…',false,2500)})
-      .catch(function(err){
-        if(casting&&v.remote.state!=='connected'){casting=false;play(cur)}
-        var n=(err&&err.name)||'error';
-        if(n!=='NotAllowedError')say('Chrome no encuentra tu Chromecast. Revisa que esté encendido y en el mismo wifi.',true,5000);
+      .catch(function(){
+        if(casting&&cur&&v.remote.state!=='connected'){casting=false;play(cur)}
+        openHelp();
       });
   };
 
