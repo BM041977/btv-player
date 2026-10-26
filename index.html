@@ -92,7 +92,7 @@ li .star.f{color:var(--fav)}
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v39</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v40</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -432,7 +432,7 @@ li .star.f{color:var(--fav)}
   var casting=false;
   function openHelp(){
     $('castChan').textContent=cur?('Canal actual: '+cur.name):'Primero elige un canal para poder enviar su enlace.';
-    $('castHelp').hidden=false;
+    $('castHelp').hidden=false;pushGuard();
   }
   $('btnCopy').onclick=function(){
     if(!cur){say('Primero elige un canal.',true,3000);return}
@@ -440,8 +440,17 @@ li .star.f{color:var(--fav)}
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(cur.url).then(done).catch(function(){$('castChan').textContent=cur.url})}
     else $('castChan').textContent=cur.url;
   };
-  try{history.replaceState({btv:1},'');history.pushState({btv:2},'')}catch(e){}
-  window.addEventListener('popstate',function(){try{history.pushState({btv:2},'')}catch(e){}});
+  /* Botón "atrás": nunca saca de la app; cierra lo abierto y se queda en el inicio.
+     Chrome solo respeta entradas de historial creadas con un toque del usuario. */
+  var guard=false;
+  function pushGuard(){if(guard)return;try{history.pushState({btv:1},'');guard=true}catch(e){}}
+  document.addEventListener('pointerdown',pushGuard,true);
+  window.addEventListener('popstate',function(){
+    guard=false;
+    if(!$('castHelp').hidden){$('castHelp').hidden=true;return}
+    if($('addBox').classList.contains('open')){$('addBox').classList.remove('open');$('btnAdd').setAttribute('aria-expanded',false);return}
+    if(document.fullscreenElement){try{document.exitFullscreen()}catch(e){}return}
+  });
   $('btnWvc').onclick=function(){
     if(!cur){$('castChan').textContent='Primero elige un canal.';return}
     var u=cur.url.replace(/^https?:\/\//,'');var sch=cur.url.indexOf('https')==0?'https':'http';
