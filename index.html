@@ -92,7 +92,7 @@ li .star.f{color:var(--fav)}
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v30</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v31</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -271,7 +271,7 @@ li .star.f{color:var(--fav)}
   }
   var dead=load('btv.dead2',{}),hideHttp=load('btv.hidehttp',true);
   function usable(c){
-    if(dead[c.url])return false;
+    if(dead[c.url]&&Date.now()-dead[c.url]<86400000)return false;
     if(hideHttp&&location.protocol==='https:'&&/^http:\/\//i.test(c.url))return false;
     return true;
   }
@@ -376,7 +376,7 @@ li .star.f{color:var(--fav)}
   $('btnNext').onclick=function(){step(1)};
   v.addEventListener('playing',function(){say('')});
   v.addEventListener('error',function(){if(!hls){say('Canal caído o bloqueado. Pasa al siguiente.',true,4000);if(cur)markDead(cur)}});
-  function markDead(c){if(!c||favs[c.url])return;dead[c.url]=1;save('btv.dead2',dead);var y=$('scroll').scrollTop;render();$('scroll').scrollTop=y}
+  function markDead(c){if(!c||favs[c.url])return;dead[c.url]=Date.now();save('btv.dead2',dead);var y=$('scroll').scrollTop;render();$('scroll').scrollTop=y}
   var checking=false;
   $('chkHttp').checked=hideHttp;
   $('chkHttp').onchange=function(){hideHttp=this.checked;save('btv.hidehttp',hideHttp);render()};
@@ -411,7 +411,7 @@ li .star.f{color:var(--fav)}
       if(!checking){finish();return}
       if(i>=total){if(done>=total)finish();return}
       var c=todo[i++];
-      testBoth(c,function(ok){done++;if(!ok&&!favs[c.url]){dead[c.url]=1;bad++}say('Revisando '+done+' de '+total+' · caídos: '+bad);next()});
+      testBoth(c,function(ok){done++;if(!ok&&!favs[c.url]){dead[c.url]=Date.now();bad++}say('Revisando '+done+' de '+total+' · caídos: '+bad);next()});
     }
     for(var k=0;k<3;k++)next();
   };

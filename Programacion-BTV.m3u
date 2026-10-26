@@ -21,18 +21,10 @@ https://jmp2.uk/plu-64e35aff6b1fdb0008ea8441.m3u8
 https://live-scjn.ovp-vivaro.digital/ovp-origin/638a22b47746d/playlist.m3u8
 #EXTINF:-1 group-title="Nacionales",Las Estrellas
 https://channel01-onlymex.akamaized.net/hls/live/2022749/event01/index.m3u8
-#EXTINF:-1 group-title="Nacionales",Milenio
-https://jmp2.uk/plu-652e922db4b047000825f975.m3u8
-#EXTINF:-1 group-title="Nacionales",Milenio (2)
-https://epg.provider.plex.tv/library/parts/608049aefa2b8ae93c2c3a63-65b16e7b115f5ad5450cfdac/?X-Plex-Token=cTnhNqxLknrr2dCnuZab
 #EXTINF:-1 group-title="Nacionales",Once
 https://vivo.canaloncelive.tv/securepkgr3/oncemexico/playlist.m3u8
 #EXTINF:-1 group-title="Nacionales",Once (2)
 https://vivo.canaloncelive.tv/secureoncedos/oncedigital/playlist.m3u8
-#EXTINF:-1 group-title="Nacionales",Telefórmula
-https://jmp2.uk/plu-63d2c140c111bc0008cb890b.m3u8
-#EXTINF:-1 group-title="Nacionales",Telefórmula (2)
-https://mdstrm.com/live-stream-playlist/62f2c855f7981b5a5a2d8763.m3u8
 #EXTINF:-1 group-title="Novelas",Angelique
 https://jmp2.uk/stvp-US2200004HD
 #EXTINF:-1 group-title="Novelas",Celia
@@ -419,16 +411,24 @@ https://jmp2.uk/plu-6540fe6fbfbaec0008a583ae.m3u8
 https://jmp2.uk/stvp-USBC4400002GF
 #EXTINF:-1 group-title="Reality",E! Keeping Up
 https://jmp2.uk/stvp-US18000133I
+#EXTINF:-1 group-title="Reality",Empeños a lo bestia
+https://jmp2.uk/plu-5f23102d5e239d00074b092a.m3u8
+#EXTINF:-1 group-title="Reality",Empeños a lo bestia
+https://jmp2.uk/plu-60218baa464ef900073168c1.m3u8
 #EXTINF:-1 group-title="Reality",Gordon Ramsay's Hell's Kitchen
 https://jmp2.uk/plu-62ea45010d0611000839868c.m3u8
 #EXTINF:-1 group-title="Reality",Gordon Ramsay's Hell's Kitchen
 https://jmp2.uk/plu-5b4e99f4423e067bd6df6903.m3u8
+#EXTINF:-1 group-title="Reality",Hardcore Pawn
+https://jmp2.uk/plu-691b012d1148fa1cd8a75d5c.m3u8
 #EXTINF:-1 group-title="Reality",Hells Kitchen
 https://jmp2.uk/plu-6095ad97351eb0000754c1e6.m3u8
 #EXTINF:-1 group-title="Reality",Ink Master
 https://jmp2.uk/plu-655f2d713944b60008bc7e90.m3u8
 #EXTINF:-1 group-title="Reality",Ink Master
 https://jmp2.uk/plu-60807fd5db701400078219c2.m3u8
+#EXTINF:-1 group-title="Reality",Intervention by A&E
+https://jmp2.uk/stvp-USBD3500040WX
 #EXTINF:-1 group-title="Reality",Jersey Shore
 https://jmp2.uk/plu-609bfa51fbecc1000733152e.m3u8
 #EXTINF:-1 group-title="Reality",Jersey Shore
@@ -507,6 +507,8 @@ https://jmp2.uk/stvp-US18000059V
 https://jmp2.uk/plu-6320ddef274b1b0007b2ee88.m3u8
 #EXTINF:-1 group-title="Reality",Sí quiero ese vestido
 https://jmp2.uk/plu-6578836cdfed030008ce5bdb.m3u8
+#EXTINF:-1 group-title="Reality",Spike Pluto TV
+https://jmp2.uk/plu-5812bcc8237a6ff45d16c407.m3u8
 #EXTINF:-1 group-title="Reality",Survivor
 https://jmp2.uk/plu-6874ac742704ca31d815b8ed.m3u8
 #EXTINF:-1 group-title="Reality",Survivor
@@ -547,6 +549,8 @@ https://jmp2.uk/stvp-US1800004S5
 https://jmp2.uk/plu-60d393e5579a420007ee553c.m3u8
 #EXTINF:-1 group-title="Concursos",Deal or No Deal
 https://jmp2.uk/plu-5e9debf8c881310007d7bde1.m3u8
+#EXTINF:-1 group-title="Concursos",Estrella Games
+https://jmp2.uk/stvp-USBC24000145I
 #EXTINF:-1 group-title="Concursos",Family Feud
 https://jmp2.uk/plu-672e4d915534bb0008c50168.m3u8
 #EXTINF:-1 group-title="Concursos",Family Feud Classic
@@ -653,8 +657,6 @@ https://jmp2.uk/plu-6540fee72cf13100085d5a18.m3u8
 https://jmp2.uk/plu-5bee1a7359ee03633e780238.m3u8
 #EXTINF:-1 group-title="Crimen y misterio",Dog the Bounty Hunter
 https://jmp2.uk/stvp-US900002IH
-#EXTINF:-1 group-title="Crimen y misterio",Intervention by A&E
-https://jmp2.uk/stvp-USBD3500040WX
 #EXTINF:-1 group-title="Crimen y misterio",Operation Repo
 https://jmp2.uk/stvp-USBC6000219D
 #EXTINF:-1 group-title="Crimen y misterio",Road Renegades
@@ -677,16 +679,14 @@ https://jmp2.uk/plu-653bdb0fbdf3cf00089cc395.m3u8
 https://jmp2.uk/plu-5ddc266f80e3550009136843.m3u8
 #EXTINF:-1 group-title="Aventura y extremos",Pluto TV Vida Real
 https://jmp2.uk/plu-5df265697ec3510009df1ef0.m3u8
+#EXTINF:-1 group-title="Aventura y extremos",RIG TV
+https://jmp2.uk/stvp-US4500001DM
+#EXTINF:-1 group-title="Aventura y extremos",RigTV
+https://jmp2.uk/plu-681b196b896dcc617f8558fe.m3u8
 #EXTINF:-1 group-title="Aventura y extremos",Tough Jobs
 https://jmp2.uk/plu-65c69bf23ef47d0008583967.m3u8
 #EXTINF:-1 group-title="Aventura y extremos",Vidas Extremas
 https://jmp2.uk/plu-673249afc7626f0008c7205d.m3u8
-#EXTINF:-1 group-title="Motor",Empeños a lo bestia
-https://jmp2.uk/plu-5f23102d5e239d00074b092a.m3u8
-#EXTINF:-1 group-title="Motor",Empeños a lo bestia
-https://jmp2.uk/plu-60218baa464ef900073168c1.m3u8
-#EXTINF:-1 group-title="Motor",Hardcore Pawn
-https://jmp2.uk/plu-691b012d1148fa1cd8a75d5c.m3u8
 #EXTINF:-1 group-title="Motor",Mi Coche Clásico
 https://jmp2.uk/plu-656e2536fbc15b00084ae29d.m3u8
 #EXTINF:-1 group-title="Motor",Motorvision TV
@@ -701,12 +701,6 @@ https://jmp2.uk/plu-65bd0f53dc10a40008e68b96.m3u8
 https://jmp2.uk/plu-6080345ebb49b90007ce0baf.m3u8
 #EXTINF:-1 group-title="Motor",Pluto TV Velocidad
 https://jmp2.uk/plu-5dd6dc7480e3550009133d4a.m3u8
-#EXTINF:-1 group-title="Motor",RIG TV
-https://jmp2.uk/stvp-US4500001DM
-#EXTINF:-1 group-title="Motor",RigTV
-https://jmp2.uk/plu-681b196b896dcc617f8558fe.m3u8
-#EXTINF:-1 group-title="Motor",Spike Pluto TV
-https://jmp2.uk/plu-5812bcc8237a6ff45d16c407.m3u8
 #EXTINF:-1 group-title="Motor",Top Gear
 https://jmp2.uk/plu-60d356a534f63f000850cdd7.m3u8
 #EXTINF:-1 group-title="Motor",Top Gear
@@ -1191,8 +1185,6 @@ https://jmp2.uk/plu-68adc3fdd8f7693ae347a63a.m3u8
 https://jmp2.uk/plu-5d3609cd6a6c78d7672f2a81.m3u8
 #EXTINF:-1 group-title="Música",Paisajes por Stingray
 https://jmp2.uk/plu-5f4fed840a2764000720d966.m3u8
-#EXTINF:-1 group-title="Música",Quiero TV
-https://stream.ontvmx.com/ontv/ghxTYEQmKkB2UJyVuW/playlist.m3u8
 #EXTINF:-1 group-title="Música",Vevo Íconos Latinos
 https://jmp2.uk/plu-64d161c93c785e0008df575e.m3u8
 #EXTINF:-1 group-title="Música",Vevo Regional Mexicano
@@ -1213,8 +1205,6 @@ https://jmp2.uk/stvp-ES1300001QC
 https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/index.m3u8
 #EXTINF:-1 group-title="Internacionales",DW América (3)
 https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8
-#EXTINF:-1 group-title="Internacionales",Estrella Games
-https://jmp2.uk/stvp-USBC24000145I
 #EXTINF:-1 group-title="Internacionales",Estrella TV
 https://jmp2.uk/stvp-USBA300040WR
 #EXTINF:-1 group-title="Internacionales",EstrellaTV
@@ -1429,6 +1419,10 @@ https://jmp2.uk/plu-632b619c8d2a6c0007ff534e.m3u8
 https://jmp2.uk/plu-63d025db4e83e700086eaa96.m3u8
 #EXTINF:-1 group-title="Noticias",LiveNOW from FOX
 https://jmp2.uk/stvp-USBA300024TN
+#EXTINF:-1 group-title="Noticias",Milenio
+https://jmp2.uk/plu-652e922db4b047000825f975.m3u8
+#EXTINF:-1 group-title="Noticias",Milenio (2)
+https://epg.provider.plex.tv/library/parts/608049aefa2b8ae93c2c3a63-65b16e7b115f5ad5450cfdac/?X-Plex-Token=cTnhNqxLknrr2dCnuZab
 #EXTINF:-1 group-title="Noticias",N+ Univision 24/7
 https://jmp2.uk/stvp-USBD1700014QU
 #EXTINF:-1 group-title="Noticias",NBC Los Angeles News
@@ -1451,6 +1445,8 @@ https://jmp2.uk/stvp-USBA300028QU
 https://jmp2.uk/stvp-US3000005RS
 #EXTINF:-1 group-title="Noticias",OAN Plus
 https://jmp2.uk/plu-5e7cf6c7b156d500078c5f44.m3u8
+#EXTINF:-1 group-title="Noticias",Quiero TV
+https://stream.ontvmx.com/ontv/ghxTYEQmKkB2UJyVuW/playlist.m3u8
 #EXTINF:-1 group-title="Noticias",Radio-Canada INFO
 https://jmp2.uk/plu-62cc1e1e0d0611000837dc1d.m3u8
 #EXTINF:-1 group-title="Noticias",RCN Noticias
@@ -1471,6 +1467,10 @@ https://jmp2.uk/plu-55b285cd2665de274553d66f.m3u8
 https://jmp2.uk/stvp-USBB52000022Q
 #EXTINF:-1 group-title="Noticias",Sky News International
 https://jmp2.uk/stvp-ES3400004SS
+#EXTINF:-1 group-title="Noticias",Telefórmula
+https://jmp2.uk/plu-63d2c140c111bc0008cb890b.m3u8
+#EXTINF:-1 group-title="Noticias",Telefórmula (2)
+https://mdstrm.com/live-stream-playlist/62f2c855f7981b5a5a2d8763.m3u8
 #EXTINF:-1 group-title="Noticias",Telemundo Al Día
 https://jmp2.uk/stvp-USBB3200016HO
 #EXTINF:-1 group-title="Noticias",Telemundo Noticias California
