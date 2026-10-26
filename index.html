@@ -95,7 +95,7 @@ li .star.f{color:var(--fav)}
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v33</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v34</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -326,11 +326,17 @@ li .star.f{color:var(--fav)}
   function setNow(t){now.textContent=t;now.className='now'}
 
   function canNative(){return !!(v.canPlayType&&v.canPlayType('application/vnd.apple.mpegurl'))}
-  function play(c){
-    c._nat=0;
+  function isHlsUrl(u){return /\.m3u8(\?|$)/i.test(u)||/\/hls\//i.test(u)}
+  function play(c,fb){
+    if(!fb){c._nat=0;c._hjs=0}
+    c._played=false;
     cur=c;setNow(c.name);say('Cargando…');stop();document.body.classList.add('hasvid');
     var u=c.url,isHls=/\.m3u8(\?|$)/i.test(u)||/\/hls\//i.test(u);
-    if(isHls&&window.Hls&&Hls.isSupported()){
+    if(isHls&&canNative()&&!c._hjs){
+      /* Reproductor del teléfono primero: así Chrome detecta la pantalla y se activa el aro azul de transmitir */
+      c._nat=1;v.src=u;v.play().catch(function(){});
+      setTimeout(function(){if(cur===c&&!c._played&&c._nat&&!c._hjs&&window.Hls&&Hls.isSupported()){c._hjs=1;play(c,true)}},9000);
+    }else if(isHls&&window.Hls&&Hls.isSupported()){
       hls=new Hls({lowLatencyMode:true,xhrSetup:function(x,url){if(ADS.test(url)){x.abort&&x.abort()}}});
       hls.loadSource(u);hls.attachMedia(v);
       hls.on(Hls.Events.MANIFEST_PARSED,function(){v.play().catch(function(){})});
@@ -359,8 +365,8 @@ li .star.f{color:var(--fav)}
   $('btnOvNext').onclick=function(e){e.stopPropagation();step(1);showUI()};
   $('btnPrev').onclick=function(){step(-1)};
   $('btnNext').onclick=function(){step(1)};
-  v.addEventListener('playing',function(){say('')});
-  v.addEventListener('error',function(){if(!hls){say('Canal caído o bloqueado. Pasa al siguiente.',true,4000);if(cur)markDead(cur)}});
+  v.addEventListener('playing',function(){if(cur)cur._played=true;say('')});
+  v.addEventListener('error',function(){if(!hls){if(cur&&cur._nat&&!cur._hjs&&isHlsUrl(cur.url)&&window.Hls&&Hls.isSupported()){cur._hjs=1;play(cur,true);return}say('Canal caído o bloqueado. Pasa al siguiente.',true,4000);if(cur)markDead(cur)}});
   function markDead(c){if(!c||favs[c.url])return;dead[c.url]=1;save('btv.dead2',dead);var y=$('scroll').scrollTop;render();$('scroll').scrollTop=y}
   var checking=false;
   $('chkHttp').checked=hideHttp;
