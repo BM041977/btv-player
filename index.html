@@ -95,7 +95,7 @@ li .star.f{color:var(--fav)}
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v31</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v32</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -446,7 +446,7 @@ li .star.f{color:var(--fav)}
   $('btnWvc').onclick=function(){
     if(!cur){$('castChan').textContent='Primero elige un canal.';return}
     var u=cur.url.replace(/^https?:\/\//,'');var sch=cur.url.indexOf('https')==0?'https':'http';
-    var a=document.createElement('a');a.rel='noopener';a.href='intent://'+u+'#Intent;scheme='+sch+';action=android.intent.action.VIEW;type=video/*;package=com.instantbits.cast.webvideo;end';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500);
+    var a=document.createElement('a');a.rel='noopener';a.href='intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT='+encodeURIComponent(cur.url)+';package=com.instantbits.cast.webvideo;end';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500);
     setTimeout(function(){
       if(!document.hidden&&document.hasFocus()){say('No se abrió Web Video Caster. Prueba “Enviar enlace a otra app” y elígelo ahí.',true,6000);openHelp();$('castErr').textContent='Web Video Caster no respondió. Usa “Enviar enlace a otra app” o “Copiar enlace”.'}
     },1800);
