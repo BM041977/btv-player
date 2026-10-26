@@ -86,6 +86,7 @@ li .star.f{color:var(--fav)}
 .modal h2{margin:0;font-size:17px}
 .modal p{margin:0;color:var(--fg)}
 .modal small{color:var(--mut)}
+#btnCast.on{background:var(--acc);color:#001}
 #btnCast.avail{color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
 .stage:fullscreen{max-height:none;border-radius:0;width:100vw;height:100vh;aspect-ratio:auto}
 </style>
@@ -456,19 +457,23 @@ li .star.f{color:var(--fav)}
     v.remote.watchAvailability(function(a){castAvail=!!a;$('btnCast').classList.toggle('avail',!!a)}).catch(function(){});
   }
   if(v.remote&&v.remote.addEventListener){
-    v.remote.addEventListener('disconnect',function(){if(casting&&cur){casting=false;play(cur)}});
+    v.remote.addEventListener('connecting',function(){say('Conectando con la pantalla…')});
+    v.remote.addEventListener('connect',function(){$('btnCast').classList.add('on');say('Transmitiendo a la pantalla. Toca el botón otra vez para desconectar.',false,4000)});
+    v.remote.addEventListener('disconnect',function(){$('btnCast').classList.remove('on');say('Transmisión terminada',false,2500);if(casting&&cur){casting=false;play(cur)}});
   }
   $('btnCast').onclick=function(e){
     e.stopPropagation();showUI();
     if(!(v.remote&&v.remote.prompt)){if(cur)$('btnWvc').click();else openHelp();return}
+    /* Ya conectado: el selector de Chrome ofrece desconectar */
+    if(v.remote.state==='connected'||v.remote.state==='connecting'){v.remote.prompt().catch(function(){});return}
     /* Para transmitir, el video debe ir directo por su enlace (no por el reproductor interno) */
     if(hls&&cur){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
     v.remote.prompt().then(function(){say('Transmitiendo…',false,2500)})
       .catch(function(e){
-        var wasCast=casting;
         if(casting&&cur&&v.remote.state!=='connected'){casting=false;play(cur)}
-        if(e&&e.name==='NotAllowedError')return; /* el usuario cerró el selector */
-        if(cur){$('btnWvc').click()}else openHelp();
+        var n=(e&&e.name)||'error';
+        say('No se pudo transmitir directo ('+n+'). Abriendo otras opciones…',true,3500);
+        setTimeout(openHelp,600);
       });
   };
 
