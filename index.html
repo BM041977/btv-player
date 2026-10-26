@@ -95,7 +95,7 @@ li .star.f{color:var(--fav)}
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v32</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v33</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -446,7 +446,7 @@ li .star.f{color:var(--fav)}
   $('btnWvc').onclick=function(){
     if(!cur){$('castChan').textContent='Primero elige un canal.';return}
     var u=cur.url.replace(/^https?:\/\//,'');var sch=cur.url.indexOf('https')==0?'https':'http';
-    var a=document.createElement('a');a.rel='noopener';a.href='intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT='+encodeURIComponent(cur.url)+';package=com.instantbits.cast.webvideo;end';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500);
+    var a=document.createElement('a');a.rel='noopener';a.href='intent://'+u+'#Intent;scheme='+sch+';action=android.intent.action.VIEW;type=video/*;package=com.instantbits.cast.webvideo;end';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500);
     setTimeout(function(){
       if(!document.hidden&&document.hasFocus()){say('No se abrió Web Video Caster. Prueba “Enviar enlace a otra app” y elígelo ahí.',true,6000);openHelp();$('castErr').textContent='Web Video Caster no respondió. Usa “Enviar enlace a otra app” o “Copiar enlace”.'}
     },1800);
@@ -473,21 +473,16 @@ li .star.f{color:var(--fav)}
   $('btnCast').onclick=function(e){
     e.stopPropagation();showUI();
     if(!cur){say('Primero elige un canal.',true,3000);return}
-    if(!castAvail||!(v.remote&&v.remote.prompt)){$('btnWvc').click();return} /* sin aro azul: Web Video Caster */
+    if(!(v.remote&&v.remote.prompt)){showQuick(12000);return}
     if(v.remote.state==='connected'||v.remote.state==='connecting'){v.remote.prompt().catch(function(){});return}
-    var settled=false,wd=null;
-    function restore(){if(casting&&v.remote.state!=='connected'){casting=false;play(cur)}}
+    /* Para transmitir, el video debe ir directo por su enlace (no por el reproductor interno) */
     if(hls){var u=cur.url;stop();v.src=u;v.play().catch(function(){});casting=true}
-    say('Elige tu pantalla…',false,6000);
-    /* Si Chrome no responde en unos segundos, ofrecer Web Video Caster con un toque */
-    wd=setTimeout(function(){if(!settled&&v.remote.state!=='connected')showQuick(12000)},3500);
-    v.remote.prompt().then(function(){settled=true;clearTimeout(wd);$('btnQuick').hidden=true})
+    v.remote.prompt().then(function(){$('btnQuick').hidden=true;say('Transmitiendo…',false,2500)})
       .catch(function(err){
-        settled=true;clearTimeout(wd);restore();
+        if(casting&&v.remote.state!=='connected'){casting=false;play(cur)}
         var n=(err&&err.name)||'error';
-        if(n==='NotAllowedError'){showQuick(12000);return} /* cerró el selector: ofrecer WVC con un toque */
-        say('Directo no disponible ('+n+'). Abriendo Web Video Caster…',false,2500);
-        setTimeout(function(){$('btnWvc').click()},500);
+        if(n!=='NotAllowedError')say('No hay pantalla directa para este canal. Puedes usar WVC.',true,4000);
+        showQuick(12000);
       });
   };
 
