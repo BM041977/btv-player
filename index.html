@@ -101,7 +101,7 @@ li .star.f{color:var(--fav)}
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v32</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v33</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -201,6 +201,7 @@ li .star.f{color:var(--fav)}
       <button id="btnParse">Cargar texto pegado</button>
       <button id="btnFile">Abrir archivo .m3u</button>
       <button id="btnCheck" class="pri">Revisar y ocultar caídos</button>
+      <button id="btnSubScan">Buscar canales con subtítulos</button>
       <button id="btnRestore">Mostrar ocultos</button>
       <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="chkHttp" checked> Ocultar enlaces http (no abren aquí)</label>
       <button id="btnClear">Borrar lista activa</button>
@@ -238,11 +239,12 @@ li .star.f{color:var(--fav)}
 (function(){
   var $=function(id){return document.getElementById(id)};
   var v=$('v'),stage=$('stage'),msg=$('msg'),list=$('list'),now=$('now');
-  var lists=[],favs={},cur=null,hls=null,tab='all',grp='',shown=[],uiTimer=null;
+  var lists=[],favs={},cur=null,hls=null,tab='all',grp='',shown=[],uiTimer=null,subsInfo={};
 
   function load(k,d){try{var s=localStorage.getItem(k);return s?JSON.parse(s):d}catch(e){return d}}
   function save(k,x){try{localStorage.setItem(k,JSON.stringify(x))}catch(e){}}
-  favs=load('btv.favs',{});
+  favs=load('btv.favs',{});subsInfo=load('btv.subs',{});
+  function chanSubs(c){return subsInfo[c.url]===1}
   lists=load('btv.lists',null);
   if(!lists){var old=load('btv.channels',[]);lists=old.length?[{id:'l'+Date.now(),name:'Mi lista',channels:old}]:[]}
 
@@ -312,6 +314,7 @@ li .star.f{color:var(--fav)}
   }
   function current(){
     if(tab==='all'){var a=[];lists.forEach(function(l){a=a.concat(l.channels)});return uniq(a)}
+    if(tab==='subs'){var q=[];lists.forEach(function(l){q=q.concat(l.channels)});return uniq(q).filter(chanSubs)}
     if(tab==='fav'){var b=[];lists.forEach(function(l){b=b.concat(l.channels)});return uniq(b).filter(function(c){return favs[c.url]})}
     for(var i=0;i<lists.length;i++)if(lists[i].id===tab)return lists[i].channels;
     tab='all';return current();
@@ -323,10 +326,12 @@ li .star.f{color:var(--fav)}
       b.onclick=function(){tab=id;grp='';render()};ch.appendChild(b);
     }
     chip('all','Todos');chip('fav','Favoritos ★');
+    var nsub=0;lists.forEach(function(l){l.channels.forEach(function(c){if(chanSubs(c))nsub++})});
+    if(nsub)chip('subs','Con subtítulos ('+nsub+')');
     lists.forEach(function(l){chip(l.id,l.name)});
     /* segunda fila: géneros de la lista elegida */
     var gc=$('gchips');gc.innerHTML='';
-    if(tab==='all'||tab==='fav'){gc.hidden=true;return}
+    if(tab==='all'||tab==='fav'||tab==='subs'){gc.hidden=true;return}
     var order=[],count={};
     current().forEach(function(c){if(c.g&&usable(c)){if(!count[c.g]){count[c.g]=0;order.push(c.g)}count[c.g]++}});
     if(order.length<2){gc.hidden=true;grp='';return}
@@ -344,12 +349,12 @@ li .star.f{color:var(--fav)}
     shown=current().filter(function(c){return usable(c)&&(!grp||c.g===grp)&&(!q||c.name.toLowerCase().indexOf(q)>=0)});
     if(!shown.length){
       var e=document.createElement('li');e.className='empty';
-      e.textContent=lists.length?(tab==='fav'?'Aún no marcas favoritos.':'Sin resultados.'):'Aún no hay canales. Toca “+ Listas” para cargar una.';
+      e.textContent=lists.length?(tab==='fav'?'Aún no marcas favoritos.':tab==='subs'?'Aún no hay canales marcados. Toca “Buscar canales con subtítulos” en + Listas.':'Sin resultados.'):'Aún no hay canales. Toca “+ Listas” para cargar una.';
       list.appendChild(e);return;
     }
     shown.slice(0,800).forEach(function(c){
       var li=document.createElement('li');if(cur&&cur.url===c.url)li.className='on';
-      var b=document.createElement('button');b.className='name';b.textContent=c.name;b.title=c.name;
+      var b=document.createElement('button');b.className='name';b.textContent=c.name+(chanSubs(c)?'  [CC]':'');b.title=c.name;
       b.onclick=function(){play(c)};
       var s=document.createElement('button');s.className='star'+(favs[c.url]?' f':'');s.textContent=favs[c.url]?'★':'☆';
       s.setAttribute('aria-label','Favorito');
@@ -528,6 +533,41 @@ li .star.f{color:var(--fav)}
     v.textTracks.addEventListener('addtrack',function(){subUI();subAuto();if(!$('subBox').hidden)subOpen()});
     v.textTracks.addEventListener('change',subUI);
   }catch(e){}
+
+  /* ---- Buscar canales con subtítulos ---- */
+  var scanning=false;
+  $('btnSubScan').onclick=function(){
+    if(scanning){scanning=false;return}
+    if(checking){say('Espera a que termine la revisión de caídos.',true,3500);return}
+    if(!(window.Hls&&Hls.isSupported())){say('Este navegador no permite revisar la lista.',true,4000);return}
+    if(tab==='all'||tab==='fav'||tab==='subs'){say('Elige primero una lista (pestaña de abajo) y, si quieres, un género.',true,4500);return}
+    var todo=current().filter(function(c){return usable(c)&&(!grp||c.g===grp)&&subsInfo[c.url]===undefined});
+    if(!todo.length){say('No hay canales nuevos por revisar aquí.',false,3500);return}
+    scanning=true;$('btnSubScan').textContent='Detener búsqueda';
+    $('addBox').classList.remove('open');$('btnAdd').setAttribute('aria-expanded',false);
+    var i=0,done=0,found=0,active=0,total=todo.length;
+    function finish(){scanning=false;$('btnSubScan').textContent='Buscar canales con subtítulos';save('btv.subs',subsInfo);render();say('Listo: '+found+' con subtítulos de '+total+' revisados',false,7000)}
+    function probe(c,cb){
+      var h=new Hls({manifestLoadingMaxRetry:0,manifestLoadingTimeOut:7000,levelLoadingMaxRetry:0}),fin=false;
+      function end(r){if(fin)return;fin=true;clearTimeout(t);try{h.destroy()}catch(e){}cb(r)}
+      var t=setTimeout(function(){end(null)},9000);
+      h.on(Hls.Events.MANIFEST_LOADED,function(_,d){end(((d.subtitles&&d.subtitles.length)||(d.captions&&d.captions.length))?1:0)});
+      h.on(Hls.Events.ERROR,function(_,d){if(d.fatal)end(null)});
+      try{h.loadSource(c.url)}catch(e){end(null)}
+    }
+    function pump(){
+      while(scanning&&active<3&&i<total){
+        active++;
+        (function(c){probe(c,function(r){
+          active--;done++;
+          if(r!==null){subsInfo[c.url]=r;if(r===1)found++}
+          say('Buscando '+done+' de '+total+' · con subtítulos: '+found);pump();
+        })})(todo[i++]);
+      }
+      if(active===0&&(!scanning||i>=total))finish();
+    }
+    pump();
+  };
 
   /* ---- Imagen en imagen, pantalla completa, transmitir ---- */
   function pip(){
