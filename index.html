@@ -42,6 +42,15 @@ video{width:100%;height:100%;display:block;background:#000;object-fit:contain}
 .ov .tr{top:8px;right:8px}
 .ov .tr2{top:8px;right:54px}
 .ov .tr3{top:8px;right:100px}
+.ov .tr4{top:8px;right:146px}
+.ov .ib.cc{font:700 12px/1 system-ui,sans-serif;letter-spacing:.3px}
+#btnCC.on{color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+video::cue{background:rgba(0,0,0,.78);color:#fff;font-family:system-ui,sans-serif;text-shadow:none}
+video.cs-s::cue{font-size:15px}
+video.cs-m::cue{font-size:20px}
+video.cs-l::cue{font-size:28px}
+#subList{display:flex;flex-wrap:wrap;gap:8px}
+#subList button[aria-pressed=true],#subSize button[aria-pressed=true]{border-color:var(--acc);color:var(--acc);background:#3ea6ff1f}
 .ov .prv{top:50%;left:calc(50% - 70px);transform:translate(-50%,-50%);width:46px;height:46px;font-size:18px}
 .ov .nxt{top:50%;left:calc(50% + 70px);transform:translate(-50%,-50%);width:46px;height:46px;font-size:18px}
 .ov .mid{top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;font-size:20px}
@@ -92,7 +101,7 @@ li .star.f{color:var(--fav)}
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v31</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v32</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -109,6 +118,7 @@ li .star.f{color:var(--fav)}
       <button class="ib tr" id="btnFull" aria-label="Pantalla completa"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
       <button class="ib tr2" id="btnPip" aria-label="Imagen en imagen"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="12" y="11" width="8" height="6" rx="1" fill="currentColor"/></svg></button>
       <button class="ib tr3" id="btnCast" aria-label="Transmitir a una pantalla"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6V5h18v14h-7"/><path d="M3 11a8 8 0 0 1 8 8M3 16a3 3 0 0 1 3 3"/><circle cx="3.5" cy="19.5" r="1" fill="currentColor"/></svg></button>
+      <button class="ib tr4 cc" id="btnCC" aria-label="Subtítulos">CC</button>
       <button class="ib prv" id="btnOvPrev" aria-label="Canal anterior">⏮</button>
       <button class="ib nxt" id="btnOvNext" aria-label="Canal siguiente">⏭</button>
       <button class="ib mid" id="btnPP" aria-label="Pausa o reproducir">❚❚</button>
@@ -122,6 +132,19 @@ li .star.f{color:var(--fav)}
       </div>
     </div>
     <div id="msg" class="msg" hidden></div>
+    <div class="modal" id="subBox" hidden>
+      <div class="card" role="dialog" aria-label="Subtítulos">
+        <h2>Subtítulos</h2>
+        <div id="subList"></div>
+        <small id="subEmpty" hidden>Este canal no manda subtítulos por ahora. Algunos los mandan unos segundos después de empezar: cierra y vuelve a abrir este menú.</small>
+        <small>Tamaño</small>
+        <div class="row" id="subSize"><button data-s="s">Chico</button><button data-s="m">Mediano</button><button data-s="l">Grande</button></div>
+        <button id="btnSubFile">Cargar archivo .srt / .vtt</button>
+        <input type="file" id="subFile" accept=".srt,.vtt,text/vtt,application/x-subrip" hidden>
+        <small>Si el canal no trae subtítulos, Android puede ponerlos solo: busca “Subtítulos instantáneos” o “Live Caption” en Ajustes. Funciona con el audio de cualquier app y, según el teléfono, también traduce.</small>
+        <button id="btnSubClose" class="pri">Cerrar</button>
+      </div>
+    </div>
   </div>
   <div class="nav">
     <button id="btnPrev" aria-label="Canal anterior">◀</button>
@@ -343,11 +366,13 @@ li .star.f{color:var(--fav)}
   function canNative(){return !!(v.canPlayType&&v.canPlayType('application/vnd.apple.mpegurl'))}
   function play(c){
     c._nat=0;
-    cur=c;setNow(c.name);say('Cargando…');stop();document.body.classList.add('hasvid');
+    cur=c;setNow(c.name);say('Cargando…');stop();subReset();document.body.classList.add('hasvid');
     var u=c.url,isHls=/\.m3u8(\?|$)/i.test(u)||/\/hls\//i.test(u);
     if(isHls&&window.Hls&&Hls.isSupported()){
-      hls=new Hls({lowLatencyMode:true,xhrSetup:function(x,url){if(ADS.test(url)){x.abort&&x.abort()}}});
+      hls=new Hls({lowLatencyMode:true,enableWebVTT:true,enableCEA708Captions:true,subtitleDisplay:true,captionsTextTrack1Label:'CC1',captionsTextTrack2Label:'CC2',captionsTextTrack3Label:'CC3',captionsTextTrack4Label:'CC4',xhrSetup:function(x,url){if(ADS.test(url)){x.abort&&x.abort()}}});
       hls.loadSource(u);hls.attachMedia(v);
+      hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED,function(){subAuto();subUI()});
+      hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH,subUI);
       hls.on(Hls.Events.MANIFEST_PARSED,function(){v.play().catch(function(){})});
       hls.on(Hls.Events.ERROR,function(_,d){if(!d.fatal||cur!==c)return;
         if(canNative()&&!c._nat){c._nat=1;stop();v.src=u;v.play().catch(function(){});say('Probando otro método…');return}
@@ -415,6 +440,94 @@ li .star.f{color:var(--fav)}
     }
     for(var k=0;k<3;k++)next();
   };
+
+  /* ---- Subtítulos ---- */
+  var subPref=load('btv.sub','es'),subSize=load('btv.subsize','m'),extTracks=[];
+  v.classList.add('cs-'+subSize);
+  function subLang(l){try{return new Intl.DisplayNames(['es'],{type:'language'}).of(l)||l}catch(e){return l}}
+  function isTxt(tt){return tt.kind==='subtitles'||tt.kind==='captions'}
+  function subOff(){
+    if(hls){try{hls.subtitleTrack=-1}catch(e){}}
+    for(var k=0;k<v.textTracks.length;k++){if(isTxt(v.textTracks[k]))v.textTracks[k].mode='disabled'}
+  }
+  function subItems(){
+    var items=[],tts=v.textTracks;
+    if(hls){
+      (hls.subtitleTracks||[]).forEach(function(t,i){
+        items.push({label:t.name||subLang(t.lang)||('Pista '+(i+1)),lang:String(t.lang||'').toLowerCase(),on:hls.subtitleTrack===i,
+          pick:function(){subOff();hls.subtitleDisplay=true;hls.subtitleTrack=i}});
+      });
+    }
+    for(var k=0;k<tts.length;k++)(function(tt){
+      if(!isTxt(tt))return;
+      var ext=extTracks.some(function(e){return e.track===tt}),cea=/^CC[1-4]$/.test(tt.label);
+      if(hls&&!ext&&!cea)return; /* las pistas del manifiesto ya salen arriba */
+      items.push({label:cea?'Subtítulos integrados ('+tt.label+')':(tt.label||subLang(tt.language)||'Subtítulos'),
+        lang:String(tt.language||'').toLowerCase(),cea:cea,ext:ext,on:tt.mode==='showing',
+        pick:function(){subOff();tt.mode='showing'}});
+    })(tts[k]);
+    return items;
+  }
+  function subUI(){$('btnCC').classList.toggle('on',subItems().some(function(i){return i.on}))}
+  function subAuto(){
+    if(subPref==='off')return;
+    var all=subItems();
+    if(!all.length||all.some(function(i){return i.on}))return;
+    var cand=all.filter(function(i){return !i.ext});
+    var m=subPref==='cc'?cand.filter(function(i){return i.cea})[0]
+      :cand.filter(function(i){return !i.cea&&i.lang&&i.lang.indexOf(subPref)===0})[0];
+    if(m)m.pick();
+    subUI();
+  }
+  function subChoose(it){
+    it.pick();
+    if(!it.ext){subPref=it.cea?'cc':((it.lang||'').slice(0,2)||'on');save('btv.sub',subPref)}
+    subUI();
+  }
+  function subNone(){subOff();subPref='off';save('btv.sub',subPref);subUI()}
+  function subOpen(){
+    var box=$('subList'),items=subItems(),any=items.some(function(i){return i.on});
+    box.innerHTML='';
+    function btn(label,on,fn){var b=document.createElement('button');b.textContent=label;b.setAttribute('aria-pressed',on);b.onclick=function(e){e.stopPropagation();fn();subOpen()};box.appendChild(b)}
+    btn('Sin subtítulos',!any,subNone);
+    items.forEach(function(it){btn(it.label,it.on,function(){subChoose(it)})});
+    $('subEmpty').hidden=items.length>0;
+    var sz=$('subSize').children;
+    for(var i=0;i<sz.length;i++)sz[i].setAttribute('aria-pressed',sz[i].dataset.s===subSize);
+    $('subBox').hidden=false;
+  }
+  function subReset(){
+    extTracks.forEach(function(e){try{URL.revokeObjectURL(e.url)}catch(x){}e.el.remove()});
+    extTracks=[];$('subBox').hidden=true;subUI();
+  }
+  function srt2vtt(s){return 'WEBVTT\n\n'+s.replace(/\r/g,'').replace(/(\d{1,2}:\d{2}:\d{2}),(\d{3})/g,'$1.$2')}
+  $('btnCC').onclick=function(e){e.stopPropagation();subOpen();showUI()};
+  $('btnSubClose').onclick=function(e){e.stopPropagation();$('subBox').hidden=true};
+  $('subBox').onclick=function(e){e.stopPropagation();if(e.target===this)this.hidden=true};
+  $('subSize').onclick=function(e){
+    var b=e.target.closest('button');if(!b)return;e.stopPropagation();
+    v.classList.remove('cs-s','cs-m','cs-l');subSize=b.dataset.s;v.classList.add('cs-'+subSize);
+    save('btv.subsize',subSize);subOpen();
+  };
+  $('btnSubFile').onclick=function(e){e.stopPropagation();$('subFile').click()};
+  $('subFile').onchange=function(){
+    var f=this.files&&this.files[0];this.value='';if(!f)return;
+    f.arrayBuffer().then(function(buf){
+      var txt;try{txt=new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch(e){txt=new TextDecoder('windows-1252').decode(buf)}
+      txt=txt.replace(/^﻿/,'');
+      var vtt=/^WEBVTT/.test(txt)?txt:srt2vtt(txt);
+      var url=URL.createObjectURL(new Blob([vtt],{type:'text/vtt'}));
+      var el=document.createElement('track');el.kind='subtitles';el.label='Archivo: '+f.name;el.src=url;
+      el.onerror=function(){say('No pude leer ese archivo de subtítulos.',true,4000)};
+      v.appendChild(el);subOff();el.track.mode='showing';
+      extTracks.push({el:el,url:url,track:el.track});
+      subUI();subOpen();say('Subtítulos cargados',false,2500);
+    }).catch(function(){say('No pude leer ese archivo de subtítulos.',true,4000)});
+  };
+  try{
+    v.textTracks.addEventListener('addtrack',function(){subUI();subAuto();if(!$('subBox').hidden)subOpen()});
+    v.textTracks.addEventListener('change',subUI);
+  }catch(e){}
 
   /* ---- Imagen en imagen, pantalla completa, transmitir ---- */
   function pip(){
