@@ -102,7 +102,7 @@ select{width:100%;font:inherit;color:inherit;background:var(--panel);border:1px 
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v35</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v36</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -385,6 +385,7 @@ select{width:100%;font:inherit;color:inherit;background:var(--panel);border:1px 
   var ADS=/(doubleclick|googlesyndication|googleadservices|adservice\.google|imasdk|moatads|adnxs|adsrvr|scorecardresearch|taboola|outbrain|popads|propellerads)/i;
   function setNow(t){now.textContent=t;now.className='now'}
 
+  var watchT=null;
   function canNative(){return !!(v.canPlayType&&v.canPlayType('application/vnd.apple.mpegurl'))}
   function play(c){
     c._nat=0;
@@ -400,6 +401,16 @@ select{width:100%;font:inherit;color:inherit;background:var(--panel);border:1px 
         if(canNative()&&!c._nat){c._nat=1;stop();v.src=u;v.play().catch(function(){});say('Probando otro método…');return}
         say('Canal caído o bloqueado. Pasa al siguiente.',true,4000);markDead(c)});
     }else{v.src=u;v.play().catch(function(){})}
+    /* Si en 12 s no arranca: probar método nativo; si en otros 12 s tampoco, avisar */
+    clearTimeout(watchT);
+    watchT=setTimeout(function(){
+      if(cur!==c||!msg.textContent||msg.hidden||v.readyState>=2)return;
+      if(canNative()&&!c._nat){c._nat=1;stop();v.src=u;v.play().catch(function(){});say('Probando otro método…')}
+      watchT=setTimeout(function(){
+        if(cur!==c||v.readyState>=2)return;
+        say('No cargó. El servidor del canal no respondió (token o bloqueo). Prueba otro canal.',true,6000)
+      },12000);
+    },12000);
     save('btv.last',c);
     var items=list.children;
     for(var i=0;i<items.length;i++){items[i].className=(shown[i]&&shown[i].url===c.url)?'on':''}
