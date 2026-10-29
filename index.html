@@ -81,6 +81,7 @@ li .name{flex:1;min-width:0;text-align:left;background:none;border:0;padding:12p
 li.on .name{color:var(--acc);font-weight:600}
 li .star{background:none;border:0;padding:8px 12px;color:var(--mut);font-size:18px}
 li .star.f{color:var(--fav)}
+select{width:100%;font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
 .empty{color:var(--mut);padding:18px 4px;border:0}
 
 /* Al girar el teléfono: el video llena toda la pantalla */
@@ -101,7 +102,7 @@ li .star.f{color:var(--fav)}
 </head>
 <body>
 <header>
-  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v34</small></h1>
+  <h1>BTV <span>Player</span> <small style="font-size:11px;opacity:.6;font-weight:400">v35</small></h1>
   <button id="btnAdd" aria-expanded="false">+ Listas</button>
   <button id="btnInstall" hidden>Instalar</button>
 </header>
@@ -198,6 +199,7 @@ li .star.f{color:var(--fav)}
     </div>
     <textarea id="paste" placeholder="O pega aquí el contenido de una lista M3U"></textarea>
     <div class="row wrap">
+      <button id="btnSaveCh" class="pri">Guardar el enlace de arriba como canal</button>
       <button id="btnParse">Cargar texto pegado</button>
       <button id="btnFile">Abrir archivo .m3u</button>
       <button id="btnCheck" class="pri">Revisar y ocultar caídos</button>
@@ -215,6 +217,17 @@ li .star.f{color:var(--fav)}
     <div class="chips" id="gchips" hidden style="margin-top:6px"></div>
   </div>
   <ul id="list"></ul>
+</div>
+
+<div class="modal" id="saveBox" hidden>
+  <div class="card" role="dialog" aria-label="Guardar canal">
+    <h2>Guardar canal</h2>
+    <small>Se guarda el enlace que pegaste arriba, en “Mis canales”. Si ya existe un canal con el mismo nombre, se reemplaza su enlace (sirve para renovar enlaces que vencen).</small>
+    <input type="text" id="saveName" placeholder="Nombre del canal (ej. Foro TV)" autocomplete="off">
+    <select id="saveGenre" aria-label="Género"></select>
+    <button id="btnSaveOk" class="pri">Guardar</button>
+    <button id="btnSaveCancel">Cancelar</button>
+  </div>
 </div>
 
 <div class="modal" id="castHelp" hidden>
@@ -359,7 +372,11 @@ li .star.f{color:var(--fav)}
       var s=document.createElement('button');s.className='star'+(favs[c.url]?' f':'');s.textContent=favs[c.url]?'★':'☆';
       s.setAttribute('aria-label','Favorito');
       s.onclick=function(){if(favs[c.url])delete favs[c.url];else favs[c.url]=1;save('btv.favs',favs);render()};
-      li.appendChild(b);li.appendChild(s);list.appendChild(li);
+      li.appendChild(b);li.appendChild(s);
+      var my=myList();
+      if(my&&tab===my.id){var x=document.createElement('button');x.className='star';x.textContent='✕';x.setAttribute('aria-label','Quitar de Mis canales');
+        x.onclick=function(){my.channels=my.channels.filter(function(k){return k.url!==c.url});save('btv.lists',lists);render()};li.appendChild(x)}
+      list.appendChild(li);
     });
   }
 
@@ -567,6 +584,36 @@ li .star.f{color:var(--fav)}
       if(active===0&&(!scanning||i>=total))finish();
     }
     pump();
+  };
+
+  /* ---- Mis canales: guardar un enlace propio ---- */
+  var GENRES=['Nacionales','Novelas','Series y comedias','Reality','Concursos','Anime y animación','Crimen y misterio','Aventura y extremos','Motor','Estilo de vida y compras','Deportes','Películas','Documentales y cultura','Música','Internacionales','Noticias'];
+  var MY='Mis canales';
+  function myList(){for(var i=0;i<lists.length;i++)if(lists[i].name===MY)return lists[i];return null}
+  (function(){
+    var sel=$('saveGenre');
+    GENRES.forEach(function(g){var o=document.createElement('option');o.value=o.textContent=g;sel.appendChild(o)});
+    var o=document.createElement('option');o.value='';o.textContent='Sin género';sel.appendChild(o);sel.value='Noticias';
+  })();
+  $('btnSaveCh').onclick=function(){
+    var u=$('url').value.trim();
+    if(!/^https?:\/\//i.test(u)){say('Pega primero el enlace del canal en la barra de arriba.',true,4500);return}
+    $('saveBox').hidden=false;$('saveName').focus();
+  };
+  $('btnSaveCancel').onclick=function(){$('saveBox').hidden=true};
+  $('saveBox').onclick=function(e){if(e.target===this)this.hidden=true};
+  $('btnSaveOk').onclick=function(){
+    var name=$('saveName').value.trim(),u=$('url').value.trim(),g=$('saveGenre').value;
+    if(!name){say('Escribe un nombre para el canal.',true,3500);return}
+    var l=myList();if(!l){l={id:'l'+Date.now(),name:MY,channels:[]};lists.push(l)}
+    var ch={name:name,url:u};if(g)ch.g=g;
+    var rep=false;
+    l.channels=l.channels.filter(function(c){if(c.name.toLowerCase()===name.toLowerCase()){rep=true;return false}return true});
+    l.channels.push(ch);
+    delete dead[u];save('btv.dead2',dead);save('btv.lists',lists);
+    tab=l.id;grp=g||'';$('saveBox').hidden=true;$('saveName').value='';
+    $('addBox').classList.remove('open');$('btnAdd').setAttribute('aria-expanded',false);
+    render();say((rep?'Actualizado: ':'Guardado: ')+name+' en Mis canales'+(g?' › '+g:''),false,4500);
   };
 
   /* ---- Imagen en imagen, pantalla completa, transmitir ---- */
