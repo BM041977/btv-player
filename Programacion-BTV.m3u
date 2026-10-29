@@ -1375,6 +1375,8 @@ https://jmp2.uk/plu-60d3583ef310610007fb02b1.m3u8
 https://jmp2.uk/stvp-ES260000968
 #EXTINF:-1 group-title="Noticias",Euronews Español
 https://jmp2.uk/plu-619d59b7cbef25000728221c.m3u8
+#EXTINF:-1 group-title="Noticias",Foro TV
+https://channel02secure-notusa.akamaized.net/hls/live/2023914/event01/index_6.m3u8?hdntl=exp=1793325926~acl=/*~data=hdntl~hmac=602594898c97fd0b5ef05b7fa68f805135629921162d6d6914d0726058fd37de&
 #EXTINF:-1 group-title="Noticias",FOX LOCAL Los Angeles
 https://jmp2.uk/plu-667f2c7b22acab0008b7072b.m3u8
 #EXTINF:-1 group-title="Noticias",FOX Weather
