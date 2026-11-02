@@ -24,6 +24,10 @@ button.pri{background:var(--acc);color:#04121f;border-color:var(--acc);font-weig
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .row{display:flex;gap:8px;align-items:center}
 .row.wrap{flex-wrap:wrap}
+.urlwrap{position:relative;flex:1;min-width:0;display:flex}
+.urlwrap input{padding-right:38px}
+#btnClearUrl{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:30px;height:30px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--mut);font-size:16px;line-height:1;cursor:pointer}
+#btnClearUrl:active{background:var(--line)}
 input[type=text],input[type=search],textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0}
 textarea{min-height:80px;resize:vertical}
 
@@ -108,7 +112,10 @@ select{width:100%;font:inherit;color:inherit;background:var(--panel);border:1px 
 </header>
 
 <div class="row urlbar" style="flex-wrap:nowrap">
-  <input type="text" id="url" placeholder="Pega aquí un enlace .m3u8, .mp4 o una lista .m3u" inputmode="url" enterkeyhint="go" autocomplete="off">
+  <div class="urlwrap">
+    <input type="text" id="url" placeholder="Pega aquí un enlace .m3u8, .mp4 o una lista .m3u" inputmode="url" enterkeyhint="go" autocomplete="off">
+    <button id="btnClearUrl" type="button" aria-label="Borrar enlace" hidden>✕</button>
+  </div>
   <button id="btnGo" class="pri">Ir ▶</button>
 </div>
 
@@ -720,6 +727,10 @@ select{width:100%;font:inherit;color:inherit;background:var(--panel);border:1px 
   };
   $('url').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('btnPlay').click()}});
   $('btnGo').onclick=function(){$('btnPlay').click()};
+  function syncClearUrl(){$('btnClearUrl').hidden=!$('url').value}
+  $('url').addEventListener('input',syncClearUrl);
+  $('btnClearUrl').onclick=function(){$('url').value='';syncClearUrl();$('url').focus()};
+  syncClearUrl();
   $('btnPlay').onclick=function(){
     var u=$('url').value.trim();if(!u)return;
     if(/\.m3u(\?|$)/i.test(u)){$('btnLoadList').click();return}
