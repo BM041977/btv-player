@@ -17,8 +17,9 @@ h1{margin:0;font-size:20px;letter-spacing:.02em}
 h1 span{color:var(--acc)}
 p{margin:0;color:var(--mut);font-size:14px}
 input{font:inherit;color:inherit;width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;letter-spacing:.08em;text-transform:uppercase}
-input:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-button{font:inherit;background:var(--acc);color:#04121f;border:0;border-radius:10px;padding:11px;font-weight:600;cursor:pointer}
+input:focus-visible,button:focus-visible,a.btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button,a.btn{font:inherit;background:var(--acc);color:#04121f;border:0;border-radius:10px;padding:11px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;display:block}
+a.btn.sec{background:transparent;color:var(--fg);border:1px solid var(--line);font-weight:500}
 button:disabled{opacity:.6;cursor:default}
 .ask{text-align:center}
 .err{color:var(--bad);min-height:1.4em;font-size:14px}
@@ -31,29 +32,40 @@ button:disabled{opacity:.6;cursor:default}
   <input id="code" type="text" placeholder="XXX-XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Código de acceso">
   <div class="err" id="err" role="alert"></div>
   <button id="go" type="submit">Entrar</button>
+  <a class="btn sec" id="ask" href="https://wa.me/529612170091?text=Hola%20Baldemar%2C%20quiero%20acceso%20a%20BTV%20Player.%20Mi%20nombre%20es%3A%20" target="_blank" rel="noopener">Pedir acceso</a>
   <p class="ask">¿No tienes código?<br>Baldemar Maza León<br>9612170091</p>
 </form>
 <script>
 (function(){
-  var KEY='btv.k', enc=new TextEncoder(), ITER=150000;
+  var KEY='btv.k', AKEY='btv.a', TKEY='btv.gh', VKEY='btv.v', VER='2', enc=new TextEncoder(), ITER=150000;
+  var GH={o:'BM041977',r:'btv-player',b:'main'};
+  var ALPHA='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  var S={raw:null,key:null,a:null};   /* llave maestra (bytes y CryptoKey) y llave de administrador */
   var $=function(i){return document.getElementById(i)};
   function b64d(s){var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
   function b64e(a){var s='';a=new Uint8Array(a);for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s)}
-  function aes(raw){return crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt'])}
+  function rnd(n){return crypto.getRandomValues(new Uint8Array(n))}
+  function aes(raw){return crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt'])}
   function dec(key,buf){buf=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12))}
+  function seal(key,plain){var iv=rnd(12);return crypto.subtle.encrypt({name:'AES-GCM',iv:iv},key,plain).then(function(ct){var o=new Uint8Array(12+ct.byteLength);o.set(iv,0);o.set(new Uint8Array(ct),12);return o})}
   function norm(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
   function getBuf(u){return fetch(u,{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()})}
+  function pbkdf(code,salt,usage){
+    return crypto.subtle.importKey('raw',enc.encode(code),'PBKDF2',false,['deriveKey']).then(function(base){
+      return crypto.subtle.deriveKey({name:'PBKDF2',salt:salt,iterations:ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,[usage])});
+  }
 
-  /* Con la llave ya abierta: baja la app cifrada, la descifra y la arranca */
+  /* ---------- arranque ---------- */
   function launch(raw){
     return aes(raw).then(function(key){
+      S.raw=raw;S.key=key;
       return getBuf('app.enc').then(function(b){return dec(key,b)}).then(function(plain){
         var of=window.fetch.bind(window);
         /* las listas propias (relativas) se descifran al vuelo; todo lo demás va directo */
         window.fetch=function(u,o){
           var s=typeof u==='string'?u:(u&&u.url)||'';
           if(s&&!/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(s)&&/\.m3u8?(\?|#|$)/i.test(s)){
-            return getBuf(s.split(/[?#]/)[0]+'.enc').then(function(b){return dec(key,b)}).then(function(p){return new Response(p,{status:200,headers:{'Content-Type':'text/plain; charset=utf-8'}})});
+            return getBuf(s.split(/[?#]/)[0]+'.enc').then(function(b){return dec(S.key,b)}).then(function(p){return new Response(p,{status:200,headers:{'Content-Type':'text/plain; charset=utf-8'}})});
           }
           return of(u,o);
         };
@@ -72,6 +84,7 @@ button:disabled{opacity:.6;cursor:default}
     [].forEach.call(d.body.attributes,function(a){document.body.setAttribute(a.name,a.value)});
     document.body.textContent='';
     [].slice.call(d.body.childNodes).forEach(function(n){document.body.appendChild(document.importNode(n,true))});
+    if(S.a){try{admin()}catch(e){}}
     (function next(i){
       if(i>=scripts.length)return;
       var o=scripts[i],n=document.createElement('script');
@@ -83,7 +96,7 @@ button:disabled{opacity:.6;cursor:default}
 
   function showForm(msg){$('f').hidden=false;$('err').textContent=msg||'';$('go').disabled=false;$('code').focus()}
 
-  /* Código → llave maestra */
+  /* Código → llave maestra (y llave de administrador, si es de la dueña) */
   function tryCode(code){
     var c=norm(code);
     if(c.length<8)return Promise.reject(new Error('bad'));
@@ -91,28 +104,211 @@ button:disabled{opacity:.6;cursor:default}
     return fetch('access.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('net');return r.json()}).then(function(list){
       var e=null;for(var i=0;i<list.length;i++)if(list[i].id===id){e=list[i];break}
       if(!e)throw new Error('bad');
-      return crypto.subtle.importKey('raw',enc.encode(c),'PBKDF2',false,['deriveKey']).then(function(base){
-        return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64d(e.s),iterations:ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt'])
-      }).then(function(wk){return dec(wk,b64d(e.w))}).catch(function(){throw new Error('bad')});
+      return pbkdf(c,b64d(e.s),'decrypt').then(function(wk){
+        return dec(wk,b64d(e.w)).then(function(k){
+          if(!e.a)return {k:k,a:null};
+          return dec(wk,b64d(e.a)).then(function(a){return {k:k,a:a}});
+        });
+      }).catch(function(){throw new Error('bad')});
     });
   }
 
   $('f').addEventListener('submit',function(ev){
     ev.preventDefault();
     var go=$('go');go.disabled=true;$('err').textContent='';
-    tryCode($('code').value).then(function(raw){
-      try{localStorage.setItem(KEY,b64e(raw))}catch(e){}
+    tryCode($('code').value).then(function(r){
+      try{localStorage.setItem(VKEY,VER);localStorage.setItem(KEY,b64e(r.k));if(r.a)localStorage.setItem(AKEY,b64e(r.a));else localStorage.removeItem(AKEY)}catch(e){}
+      S.a=r.a?new Uint8Array(r.a):null;
       $('f').hidden=true;
-      return launch(raw);
+      return launch(new Uint8Array(r.k));
     }).catch(function(e){
       showForm(e&&e.message==='net'?'No se pudo conectar. Revisa tu internet.':e&&e.message==='bad'?'Código incorrecto.':'No se pudo abrir. Intenta de nuevo.');
     });
   });
 
-  var saved=null;try{saved=localStorage.getItem(KEY)}catch(e){}
+  /* ---------- panel de administrador (solo la dueña) ---------- */
+  function admin(){
+    var API='https://api.github.com/repos/'+GH.o+'/'+GH.r;
+    var token=null;try{token=localStorage.getItem(TKEY)}catch(e){}
+    var people=[],box,body;
+    function h(t,a,c){var e=document.createElement(t);if(a)for(var k in a){if(k==='text')e.textContent=a[k];else if(k==='on'){for(var ev in a.on)e.addEventListener(ev,a.on[ev])}else e.setAttribute(k,a[k])}(c||[]).forEach(function(x){if(x)e.appendChild(x)});return e}
+    function site(){return location.origin+location.pathname.replace(/index\.html$/,'')}
+
+    function api(path,o){
+      o=o||{};
+      var hd={'Authorization':'Bearer '+token,'Accept':o.raw?'application/vnd.github.raw+json':'application/vnd.github+json'};
+      if(o.body)hd['Content-Type']='application/json';
+      return fetch(API+path,{method:o.method||'GET',headers:hd,body:o.body?JSON.stringify(o.body):undefined,cache:'no-store'}).then(function(r){
+        if(r.status===401||r.status===403||(r.status===404&&o.method)){var e=new Error('token');e.status=r.status;throw e}
+        if(!r.ok)throw new Error('GitHub '+r.status);
+        return o.raw?r.arrayBuffer():r.json();
+      });
+    }
+    function rawFile(p){return api('/contents/'+p+'?ref='+GH.b,{raw:true})}
+    function commitFiles(files,msg){
+      var base,tree;
+      return api('/git/ref/heads/'+GH.b).then(function(r){base=r.object.sha;return api('/git/commits/'+base)}).then(function(c){
+        tree=c.tree.sha;
+        return Promise.all(files.map(function(f){
+          var data=typeof f.data==='string'?enc.encode(f.data):f.data;
+          return api('/git/blobs',{method:'POST',body:{content:b64e(data),encoding:'base64'}}).then(function(b){return {path:f.path,mode:'100644',type:'blob',sha:b.sha}});
+        }));
+      }).then(function(items){return api('/git/trees',{method:'POST',body:{base_tree:tree,tree:items}})})
+        .then(function(t){return api('/git/commits',{method:'POST',body:{message:msg,tree:t.sha,parents:[base]}})})
+        .then(function(c){return api('/git/refs/heads/'+GH.b,{method:'PATCH',body:{sha:c.sha}})});
+    }
+
+    function genCode(taken){
+      for(;;){
+        var s='';while(s.length<15){var b=rnd(32);for(var i=0;i<b.length&&s.length<15;i++)if(b[i]<248)s+=ALPHA[b[i]%31]}
+        if(taken.indexOf(s.slice(0,3))<0)return s;
+      }
+    }
+    function pretty(c){return c.slice(0,3)+'-'+c.slice(3,7)+'-'+c.slice(7,11)+'-'+c.slice(11,15)}
+    function wrapEntry(code,kraw,araw){
+      var c=norm(code),salt=rnd(16),ivw=rnd(12),iva=rnd(12);
+      return pbkdf(c,salt,'encrypt').then(function(wk){
+        return crypto.subtle.encrypt({name:'AES-GCM',iv:ivw},wk,kraw).then(function(w){
+          var e={id:c.slice(0,3),s:b64e(salt)};var wb=new Uint8Array(12+w.byteLength);wb.set(ivw,0);wb.set(new Uint8Array(w),12);e.w=b64e(wb);
+          if(!araw)return e;
+          return crypto.subtle.encrypt({name:'AES-GCM',iv:iva},wk,araw).then(function(a){var ab=new Uint8Array(12+a.byteLength);ab.set(iva,0);ab.set(new Uint8Array(a),12);e.a=b64e(ab);return e});
+        });
+      });
+    }
+    function akey(){return aes(S.a)}
+    function loadPeople(){
+      return Promise.all([akey(),rawFile('people.enc')]).then(function(r){return dec(r[0],r[1])}).then(function(p){people=JSON.parse(new TextDecoder().decode(p)).people||[]});
+    }
+    function packPeople(list){return akey().then(function(k){return seal(k,enc.encode(JSON.stringify({people:list})))})}
+
+    function addPerson(name){
+      var code,entry;
+      return rawFile('access.json').then(function(buf){
+        var access=JSON.parse(new TextDecoder().decode(buf));
+        code=genCode(access.map(function(e){return e.id}));
+        return wrapEntry(code,S.raw,null).then(function(e){access.push(e);return access});
+      }).then(function(access){
+        var p={id:code.slice(0,3),name:name,code:pretty(code)};
+        var list=people.concat([p]);
+        return packPeople(list).then(function(pe){
+          return commitFiles([{path:'access.json',data:JSON.stringify(access,null,1)},{path:'people.enc',data:pe}],'Acceso: agregar persona').then(function(){people=list;return p});
+        });
+      });
+    }
+
+    function removePerson(id){
+      var keep=people.filter(function(p){return p.id!==id});
+      var newRaw=rnd(32),files=[],newKey;
+      return aes(newRaw).then(function(k){newKey=k;return api('/contents/?ref='+GH.b)}).then(function(ls){
+        var names=ls.filter(function(x){return x.type==='file'&&/\.enc$/.test(x.name)&&x.name!=='people.enc'}).map(function(x){return x.name});
+        return Promise.all(names.map(function(n){
+          return rawFile(n).then(function(b){return dec(S.key,b)}).then(function(p){return seal(newKey,p)}).then(function(c){files.push({path:n,data:c})});
+        }));
+      }).then(function(){
+        return Promise.all(keep.map(function(p){return wrapEntry(p.code,newRaw,p.owner?S.a:null)}));
+      }).then(function(access){
+        files.push({path:'access.json',data:JSON.stringify(access,null,1)});
+        return packPeople(keep);
+      }).then(function(pe){
+        files.push({path:'people.enc',data:pe});
+        return commitFiles(files,'Acceso: quitar persona');
+      }).then(function(){
+        S.raw=newRaw;S.key=newKey;people=keep;
+        try{localStorage.setItem(KEY,b64e(newRaw))}catch(e){}
+      });
+    }
+
+    /* ----- pantalla ----- */
+    function status(t,bad){var s=h('small',{text:t});if(bad)s.style.color='var(--bad)';return s}
+    function msgFor(p){
+      var first=p.name.split(/\s+/)[0];
+      return 'Hola '+first+', este es tu acceso a BTV Player.\n\nAbre: '+site()+'\nTu código: '+p.code+'\n\nLo escribes una sola vez en cada aparato. No lo compartas.';
+    }
+    function sendCard(p){
+      var m=msgFor(p);
+      return h('div',{style:'display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px'},[
+        h('b',{text:'Para '+p.name}),
+        h('code',{text:p.code,style:'font-size:17px;letter-spacing:.06em;word-break:break-all'}),
+        h('div',{class:'row wrap'},[
+          h('button',{class:'pri',text:'WhatsApp',on:{click:function(){window.open('https://wa.me/?text='+encodeURIComponent(m),'_blank')}}}),
+          h('button',{text:'Correo',on:{click:function(){location.href='mailto:?subject='+encodeURIComponent('Tu acceso a BTV Player')+'&body='+encodeURIComponent(m)}}}),
+          h('button',{text:'Copiar mensaje',on:{click:function(ev){var b=ev.target;(navigator.clipboard?navigator.clipboard.writeText(m):Promise.reject()).then(function(){b.textContent='Copiado'}).catch(function(){b.textContent='No se pudo copiar'})}}})
+        ])
+      ]);
+    }
+
+    function render(msg,bad,card){
+      body.textContent='';
+      body.appendChild(h('h2',{text:'Personas con acceso'}));
+      if(!token){
+        body.appendChild(h('p',{text:'Para publicar cambios este panel necesita una llave de GitHub. Solo se guarda en este aparato.'}));
+        body.appendChild(h('a',{href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener',text:'Crear la llave en GitHub ↗',style:'color:var(--acc)'}));
+        var inp=h('input',{type:'text',placeholder:'Pega aquí la llave',autocomplete:'off',spellcheck:'false'});
+        body.appendChild(inp);
+        body.appendChild(h('button',{class:'pri',text:'Guardar llave',on:{click:function(){var t=inp.value.trim();if(!t)return;token=t;try{localStorage.setItem(TKEY,t)}catch(e){}refresh('Cargando…')}}}));
+        if(msg)body.appendChild(status(msg,bad));
+        body.appendChild(h('button',{text:'Cerrar',on:{click:function(){box.hidden=true}}}));
+        return;
+      }
+      if(card)body.appendChild(card);
+      var ul=h('div',{style:'display:flex;flex-direction:column;gap:8px'});
+      people.forEach(function(p){
+        var row=h('div',{style:'display:flex;flex-direction:column;gap:6px;border-bottom:1px solid var(--line);padding-bottom:8px'},[
+          h('div',{style:'display:flex;justify-content:space-between;gap:8px;align-items:baseline'},[h('b',{text:p.name+(p.owner?' (tú)':'')}),h('code',{text:p.code,style:'font-size:12px;color:var(--mut)'})]),
+          h('div',{class:'row wrap'},[
+            h('button',{text:'Enviar código',on:{click:function(){render('',false,sendCard(p))}}}),
+            p.owner?null:h('button',{text:'Quitar',on:{click:function(){
+              if(!confirm('¿Quitarle el acceso a '+p.name+'? Se publican los cambios y a los demás no les pasa nada.'))return;
+              render('Quitando acceso… (puede tardar unos segundos)');
+              removePerson(p.id).then(function(){render('Listo. '+p.name+' ya no puede entrar. Los cambios tardan 1–2 minutos en verse.')}).catch(fail);
+            }}})
+          ])
+        ]);
+        ul.appendChild(row);
+      });
+      body.appendChild(ul);
+      var nm=h('input',{type:'text',placeholder:'Nombre de la persona',autocomplete:'off',style:'text-transform:none;letter-spacing:normal'});
+      var add=h('button',{class:'pri',text:'Agregar persona'});
+      add.addEventListener('click',function(){
+        var n=nm.value.trim();if(!n)return;
+        if(people.some(function(p){return p.name.toLowerCase()===n.toLowerCase()})){render('Ya hay alguien con ese nombre.',true);return}
+        add.disabled=true;render('Creando acceso…');
+        addPerson(n).then(function(p){render('Listo. Ya está publicado; funciona en 1–2 minutos.',false,sendCard(p))}).catch(fail);
+      });
+      body.appendChild(h('b',{text:'Agregar a alguien'}));
+      body.appendChild(nm);body.appendChild(add);
+      if(msg)body.appendChild(status(msg,bad));
+      body.appendChild(h('div',{class:'row wrap'},[
+        h('button',{text:'Cambiar llave de GitHub',on:{click:function(){token=null;try{localStorage.removeItem(TKEY)}catch(e){}render()}}}),
+        h('button',{text:'Cerrar',on:{click:function(){box.hidden=true}}})
+      ]));
+    }
+    function fail(e){
+      if(e&&e.message==='token'){token=null;try{localStorage.removeItem(TKEY)}catch(x){}render('La llave de GitHub no sirve o no tiene permiso para este repositorio. Pega una nueva.',true);return}
+      /* si la llave maestra cambió desde otro aparato, vuelve a pedir el código */
+      if(e&&e.name==='OperationError'){render('Tu sesión quedó vieja. Cierra y abre BTV Player y escribe tu código otra vez.',true);return}
+      render('No se pudo completar: '+((e&&e.message)||'error')+'. Intenta de nuevo.',true);
+    }
+    function refresh(msg){
+      if(!token){render();return}
+      render(msg||'Cargando…');
+      loadPeople().then(function(){render('')}).catch(fail);
+    }
+
+    var btn=h('button',{id:'btnPeople',type:'button',text:'Personas'});
+    var hd=document.querySelector('header');
+    if(hd)hd.insertBefore(btn,document.getElementById('btnInstall'));
+    body=h('div',{class:'card',role:'dialog','aria-label':'Personas con acceso'});
+    box=h('div',{class:'modal',id:'peopleBox',hidden:''},[body]);
+    document.body.appendChild(box);
+    btn.addEventListener('click',function(){box.hidden=false;refresh()});
+  }
+
+  var saved=null,savedA=null;try{saved=localStorage.getItem(KEY);savedA=localStorage.getItem(AKEY);if(saved&&localStorage.getItem(VKEY)!==VER){localStorage.removeItem(KEY);localStorage.removeItem(AKEY);saved=null;savedA=null}}catch(e){}
   if(saved){
+    S.a=savedA?b64d(savedA):null;
     launch(b64d(saved)).catch(function(e){
-      if(e&&e.name==='OperationError'){try{localStorage.removeItem(KEY)}catch(x){}showForm('Tu acceso cambió. Escribe tu código otra vez.')}
+      if(e&&e.name==='OperationError'){try{localStorage.removeItem(KEY);localStorage.removeItem(AKEY)}catch(x){}S.a=null;showForm('Tu acceso cambió. Escribe tu código otra vez.')}
       else showForm('No se pudo conectar. Revisa tu internet y recarga la página.');
     });
   }else showForm();
