@@ -20,6 +20,7 @@ input{font:inherit;color:inherit;width:100%;background:var(--bg);border:1px soli
 input:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 button{font:inherit;background:var(--acc);color:#04121f;border:0;border-radius:10px;padding:11px;font-weight:600;cursor:pointer}
 button:disabled{opacity:.6;cursor:default}
+.ask{text-align:center}
 .err{color:var(--bad);min-height:1.4em;font-size:14px}
 </style>
 </head>
@@ -30,7 +31,7 @@ button:disabled{opacity:.6;cursor:default}
   <input id="code" type="text" placeholder="XXX-XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Código de acceso">
   <div class="err" id="err" role="alert"></div>
   <button id="go" type="submit">Entrar</button>
-  <p>¿No tienes código? Pídeselo a Baldemar Maza León, 9612170091.</p>
+  <p class="ask">¿No tienes código?<br>Baldemar Maza León<br>9612170091</p>
 </form>
 <script>
 (function(){
