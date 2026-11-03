@@ -84,6 +84,7 @@ button:disabled{opacity:.6;cursor:default}
     [].forEach.call(d.body.attributes,function(a){document.body.setAttribute(a.name,a.value)});
     document.body.textContent='';
     [].slice.call(d.body.childNodes).forEach(function(n){document.body.appendChild(document.importNode(n,true))});
+    window.BTV_GUEST=!S.a;
     if(S.a){try{admin()}catch(e){}}
     (function next(i){
       if(i>=scripts.length)return;
